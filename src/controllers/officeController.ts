@@ -58,7 +58,6 @@ export const postOffice = async (req: Request, res: Response) => {
     try {
         const newPin = new Pin({lng: position.lng, lat: position.lat})
         const pin = await newPin.save()
-        console.log(pin)
         if(!pin) return res.status(500).json({status: "Internal error", msg: "There was an error creating pin"})
         const newOffice = new Office({
             name,
