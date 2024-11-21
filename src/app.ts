@@ -8,6 +8,8 @@ import authRoutes from './routes/authRoutes';
 import pinRoutes from './routes/pinRoutes';
 import path from 'path';
 import savedSearchRoutes from './routes/savedSearchRoutes';
+import messageRoutes from './routes/messageRoutes';
+import conversationRoutes from './routes/conversationRoutes';
 
 const app: Application = express();
 
@@ -32,6 +34,8 @@ app.use(passport.session())
 
 
 // Routes
+app.use('/api/message', messageRoutes)
+app.use('/api/conversation', conversationRoutes)
 app.use('/api/office', officeRoutes)
 app.use('/api/savedsearch', savedSearchRoutes)
 app.use('/api/pin', pinRoutes)
