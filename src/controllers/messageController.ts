@@ -31,11 +31,29 @@ export const getMessages = async (req: Request, res: Response) => {
     }
 }
 
+// GET /api/message/latest/:id
+export const getLatestMessage = async (req: Request, res: Response) => {
+    const {id} = req.params
+    try {
+        // Check access to conversation
+        const userid = (req.user as IUser)._id
+        const testConversation = await Conversation.findOne({_id: id, $or: [{broker: userid}, {buyer: userid}]})
+        if(!testConversation) return res.status(403).json({status: "Forbidden", msg: "You don't have access to this conversation"});
+
+        const message = await Message.findOne({conversation: id})
+        if(!message) return res.status(404).json({status: "Not Found", msg: "Can't find latest message"})
+        return res.status(200).json({status: "OK", message})
+    } catch(e) {
+        handleMongooseError(e as MongooseError, res)
+    }
+}
+
 // POST /api/message
 export const postMessage = async (req: Request, res: Response) => {
     const {message, conversation} = req.body
-
     try {
+        if(!message) return res.status(400).json({status: "Bad Request", msg: "Message can't be empty"})
+
         // Check access to conversation
         const userid = (req.user as IUser)._id
         const testConversation = await Conversation.findOne({_id: conversation, $or: [{broker: userid}, {buyer: userid}]})

@@ -4,7 +4,7 @@ import { IUser } from '../models/userModel'
 import { MongooseError } from 'mongoose'
 import handleMongooseError from '../utils/errorHandler'
 
-export const getConversations = async (req: Request, res: Response) => {
+export const getAllConversations = async (req: Request, res: Response) => {
     const userid = (req.user as IUser)._id
     try {
         const conversations = await Conversation.find({$or: [{broker: userid}, {buyer: userid}]})
