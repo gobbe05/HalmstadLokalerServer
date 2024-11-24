@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getConversations } from "../controllers/conversationController";
+import { getAllConversations } from "../controllers/conversationController";
 import isAuthenticated from "../middleware/isAuthenticated";
 
 const router = Router()
 
-router.get("/", isAuthenticated, getConversations)
+router.get("/", isAuthenticated, getAllConversations)
 
 export default router
