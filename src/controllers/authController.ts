@@ -6,7 +6,7 @@ import passport from "passport"
 
 // GET /api/auth/
 export const getAuth = async (req: Request, res: Response) => {
-    return res.status(200).json({status: "OK",message: "Authenticated"})
+    return res.status(200).json({status: "OK",message: "Authenticated", _id: (req.user as IUser)._id})
 }
 
 // GET /api/auth/me/
@@ -27,15 +27,27 @@ export const getAllUsers = async (req: Request, res: Response) => {
 
 // GET /api/auth/user/:username
 export const getUser = async (req: Request, res: Response) => {
+    const {username} = req.params
     try {
-        const {username} = req.params
-
-        const user = await User.find({username})
+        const user = await User.findOne({username})
         if(!user)
             return res.status(404).json({status: "Not Found", message: "User not found"});
 
         return res.status(200).json({status: "OK", user})
     } catch(e){
+        handleMongooseError(e as MongooseError, res)
+    }
+}
+
+// GET /auth/username/:id
+export const getUsername = async (req: Request, res: Response) => {
+    const {id} = req.params
+    try {
+        const user = await User.findOne({_id: id})
+        if(!user)
+            return res.status(404).json({status: "Not found", message: "User not found"});
+        return res.status(200).json({status: "OK", username: user.username})
+    } catch(e) {
         handleMongooseError(e as MongooseError, res)
     }
 }
