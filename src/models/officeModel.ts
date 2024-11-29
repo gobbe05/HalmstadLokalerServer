@@ -2,7 +2,7 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 import ICoordinates from '../interfaces/ICoordinates';
 import '../models/pinModel';
 
-interface IOffice extends Document {
+export interface IOffice extends Document {
     name: string,
     location: string,
     position: ICoordinates,
@@ -10,7 +10,8 @@ interface IOffice extends Document {
     tags: Array<string>,
     image: String,
     size: number,
-    owner: Types.ObjectId
+    owner: Types.ObjectId,
+    views: number
 }
 
 const officeSchema = new Schema<IOffice>({
@@ -22,8 +23,9 @@ const officeSchema = new Schema<IOffice>({
     tags: {type: [String], default: []},
     image: {type: String, required: true},
     price: { type: Number },
-    size: { type: Number, requried: true },
-    owner: { type: Schema.Types.ObjectId, ref: 'User', required: true } // Reference to the users _id
+    size: { type: Number, required: true },
+    owner: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to the users _id
+    views: { type: Number, default: 0}
 })
 
 officeSchema.index({name: "text", location: "text"})

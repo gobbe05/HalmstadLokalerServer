@@ -4,12 +4,14 @@ import { MongooseError} from 'mongoose';
 import handleMongooseError from '../utils/errorHandler';
 import { IUser } from '../models/userModel';
 import Pin from '../models/pinModel';
+import { incrementAndFetchOffices } from '../utils/incrementAndFetchOffices';
+import { incrementAndFetchOneOffice } from '../utils/incrementAndFetchOneOffice';
 
 // GET /api/office/:id
 export const getOffice = async (req: Request, res: Response) => {
     try {
         const {id} = req.params
-        const office = await Office.findOne({_id: id})
+        const office = await incrementAndFetchOneOffice({_id: id})
 
         if(!office) return res.status(404).json({status: "Not Found"})
 
@@ -22,26 +24,46 @@ export const getOffice = async (req: Request, res: Response) => {
 // GET /api/office/
 // GET /api/office?limit=iii
 // GET /api/office?search=sss
+// GET /api/office?dontincrement=bool
 export const getAllOffices = async (req: Request, res: Response) => {
     try {
         const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined
-        let {search} = req.query
+        let {search, dontincrement} = req.query
+        let offices;
 
         const searchQuery = search ? {
             $or: [
                 {name: {$regex: search, $options: "i"}},
                 {location: {$regex: search, $options: "i"}}
-            ]
-        } : {}
+            ]} : {}
 
-        if(limit !== undefined && isNaN(limit)) {
+        // Checks that limit is a number
+        if(limit !== undefined && isNaN(limit)) 
             return res.status(400).json({ status: "Bad Request", message: "Limit must be a number" });
-        }
 
-        const offices = limit ? await Office.find(searchQuery).limit(+limit) : await Office.find(searchQuery)
+        // Check views should be incremented or not
+        if(dontincrement === "true")
+            offices = limit ? await Office.find(searchQuery).limit(limit) : await Office.find(searchQuery)
+        else
+            offices = limit ? await incrementAndFetchOffices(searchQuery, limit) : await incrementAndFetchOffices(searchQuery)
         return res.status(200).json({ status: "OK", offices}) // 200 OK
     } catch(e) {
         handleMongooseError(e as MongooseError, res);
+    }
+}
+
+// GET /api/office/user/:id?limit=x
+export const getUserOffices = async (req: Request, res: Response) => {
+    try {
+        const {id} = req.params
+        const {limit} = req.query
+        const offices = limit ? await Office.find({owner: id}).limit(+limit) : await Office.find({owner: id})
+
+        if(!offices) return res.status(404).json({status: "Not Found"})
+
+        return res.status(200).json({status: "OK", offices})
+    } catch(e) {
+        handleMongooseError(e as MongooseError, res)
     }
 }
 
