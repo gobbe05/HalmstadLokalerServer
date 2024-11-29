@@ -11,7 +11,8 @@ export interface IOffice extends Document {
     image: String,
     size: number,
     owner: Types.ObjectId,
-    views: number
+    views: number,
+    visits: number
 }
 
 const officeSchema = new Schema<IOffice>({
@@ -25,7 +26,8 @@ const officeSchema = new Schema<IOffice>({
     price: { type: Number },
     size: { type: Number, required: true },
     owner: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to the users _id
-    views: { type: Number, default: 0}
+    views: { type: Number, default: 0},
+    visits: {type: Number, default: 0}
 })
 
 officeSchema.index({name: "text", location: "text"})

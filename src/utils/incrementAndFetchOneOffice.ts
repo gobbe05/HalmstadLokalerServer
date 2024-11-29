@@ -10,7 +10,7 @@ export const incrementAndFetchOneOffice = async (
 ): Promise<IOffice> => {
   try {
     // Increment views for the office document
-    await Office.updateOne(filter, { $inc: { views: 1 } });
+    await Office.updateOne(filter, { $inc: { visits: 1 } });
 
     // Fetch the updated documents
     const office = await Office.findOne(filter);  

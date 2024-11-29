@@ -15,7 +15,20 @@ export const getAllViews = async (req: Request, res: Response) => {
         const totalViews = documents.reduce((sum, doc) => sum + doc.views, 0);
         return res.status(200).json({status: "OK", views: totalViews})
     } catch(error) {
+        handleMongooseError(error as MongooseError, res)
+    }
+}
 
+// GET /api/statistics/visits
+export const getAllVisits = async (req: Request, res: Response) => {
+    try {
+        // Fetch documents matching the filter
+        const documents = await Office.find({owner: (req.user as IUser)._id})
+
+        const totalVisits = documents.reduce((sum, doc) => sum + doc.views, 0)
+        return res.status(200).json({status: "OK", visits: totalVisits})
+    } catch(error) {
+        handleMongooseError(error as MongooseError, res)
     }
 }
 
