@@ -68,7 +68,7 @@ export const postLogin = async (req: Request, res: Response, next: NextFunction)
 
         req.logIn(user, (err) => {
             if (err) return next(err);
-            return res.status(200).json({status: "OK", message: "Logged in successfully"})
+            return res.status(200).json({status: "OK", _id: user._id, message: "Logged in successfully"})
         })
     })(req, res, next)
 }
