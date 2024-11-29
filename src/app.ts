@@ -10,6 +10,8 @@ import path from 'path';
 import savedSearchRoutes from './routes/savedSearchRoutes';
 import messageRoutes from './routes/messageRoutes';
 import conversationRoutes from './routes/conversationRoutes';
+import isAuthenticated from './middleware/isAuthenticated';
+import statisticRoutes from './routes/statisticRoutes';
 
 const app: Application = express();
 
@@ -34,6 +36,7 @@ app.use(passport.session())
 
 
 // Routes
+app.use('/api/statistics', isAuthenticated, statisticRoutes)
 app.use('/api/message', messageRoutes)
 app.use('/api/conversation', conversationRoutes)
 app.use('/api/office', officeRoutes)
