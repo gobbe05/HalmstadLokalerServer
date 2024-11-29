@@ -24,7 +24,7 @@ export const getMessages = async (req: Request, res: Response) => {
         const testConversation = await Conversation.findOne({_id: id, $or: [{broker: userid}, {buyer: userid}]})
         if(!testConversation) return res.status(403).json({status: "Forbidden", msg: "You don't have access to this conversation"});
 
-        const messages = await Message.find({})
+        const messages = await Message.find({conversation: id})
         return res.status(200).json({status: "OK", messages})
     } catch(e) {
         handleMongooseError(e as MongooseError, res)
@@ -75,7 +75,7 @@ export const postMessage = async (req: Request, res: Response) => {
 
 // POST /api/message/first
 export const postFirstMessage = async (req: Request, res: Response) => {
-    const {message, broker} = req.body
+    const {message, subject, broker} = req.body
 
     try {
         // Check that broker exists
@@ -84,19 +84,19 @@ export const postFirstMessage = async (req: Request, res: Response) => {
 
         // Create conversation 
         const newConversation = new Conversation({
-            broker: broker,
-            buyer: (req.user as IUser)._id
+            broker,
+            buyer: (req.user as IUser)._id,
+            subject
         })
         const conversation = await newConversation.save()
         
-
         // Create first message
         const newMessage = new Message({
             sender: (req.user as IUser)._id,
             conversation: conversation._id,
             message: message
         })
-        const newMessage2 = await newMessage.save()
+        await newMessage.save()
 
         return res.status(200).json({status: "OK", conversation: conversation._id})
     } catch(e) {
