@@ -1,4 +1,4 @@
-import express, { Application } from 'express';
+import express, { Application, Response, Request } from 'express';
 import cors from 'cors';
 import officeRoutes from './routes/officeRoutes';
 import { ORIGIN, SESSION_SECRET } from './config';
@@ -22,6 +22,9 @@ app.use(cors({
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Serve the static files from the React app
+app.use(express.static(path.join(__dirname, 'dist')));
+
 app.use(
     session({
         secret: SESSION_SECRET,
@@ -43,5 +46,11 @@ app.use('/api/office', officeRoutes)
 app.use('/api/savedsearch', savedSearchRoutes)
 app.use('/api/pin', pinRoutes)
 app.use('/auth', authRoutes)
+
+// Catch-all handler for any requests that don’t match the static files
+app.get('*', (req: Request, res: Response) => {
+    console.log('Request URL:', req.url);
+    return res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 
 export default app;
