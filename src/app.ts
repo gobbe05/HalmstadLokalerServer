@@ -12,6 +12,7 @@ import messageRoutes from './routes/messageRoutes';
 import conversationRoutes from './routes/conversationRoutes';
 import isAuthenticated from './middleware/isAuthenticated';
 import statisticRoutes from './routes/statisticRoutes';
+import fs from "fs"
 
 const app: Application = express();
 
@@ -20,7 +21,15 @@ app.use(cors({
     origin: ORIGIN,
     credentials: true}));
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
+
+const uploadsPath = path.join(__dirname, 'uploads');
+// Ensure the uploads directory exists
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+  console.log('Uploads folder created at runtime.');
+}
+// Serve static files from uploads
+app.use('/uploads', express.static(uploadsPath));
 
 // Serve the static files from the React app
 app.use(express.static(path.join(__dirname, '../../../HalmstadLokalerClient/dist')));
