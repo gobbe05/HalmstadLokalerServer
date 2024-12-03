@@ -20,7 +20,7 @@ app.use(cors({
     origin: ORIGIN,
     credentials: true}));
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
 
 // Serve the static files from the React app
 app.use(express.static(path.join(__dirname, '../../../HalmstadLokalerClient/dist')));
