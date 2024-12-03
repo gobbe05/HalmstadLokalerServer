@@ -23,7 +23,7 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Serve the static files from the React app
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(path.join(__dirname, '../HalmstadLokalerClient/dist')));
 
 app.use(
     session({
@@ -50,7 +50,7 @@ app.use('/auth', authRoutes)
 // Catch-all handler for any requests that don’t match the static files
 app.get('*', (req: Request, res: Response) => {
     console.log('Request URL:', req.url);
-    return res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    return res.sendFile(path.join(__dirname, '../HalmstadLokalerClient/dist', 'index.html'));
 });
 
 export default app;
