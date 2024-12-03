@@ -3,13 +3,14 @@ import { deleteOffice, getAllOffices, getOffice, getUserOffices, postOffice, put
 import isAuthenticated from '../middleware/isAuthenticated';
 import multer, { StorageEngine, FileFilterCallback } from 'multer';
 import { Request } from 'express';
+import path from 'path';
 
 const router = Router();
 
 // Configure multer storage
 const storage: StorageEngine = multer.diskStorage({
   destination: (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
-    cb(null, 'uploads/'); // Store in uploads folder
+    cb(null, path.join(__dirname, "../uploads")); // Store in uploads folder
   },
   filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
     cb(null, `${Date.now()}-${file.originalname}`);
