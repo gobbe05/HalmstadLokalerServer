@@ -25,7 +25,7 @@ export const getAllVisits = async (req: Request, res: Response) => {
         // Fetch documents matching the filter
         const documents = await Office.find({owner: (req.user as IUser)._id})
 
-        const totalVisits = documents.reduce((sum, doc) => sum + doc.views, 0)
+        const totalVisits = documents.reduce((sum, doc) => sum + doc.visits, 0)
         return res.status(200).json({status: "OK", visits: totalVisits})
     } catch(error) {
         handleMongooseError(error as MongooseError, res)
