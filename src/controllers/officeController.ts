@@ -6,6 +6,7 @@ import { IUser } from '../models/userModel';
 import Pin from '../models/pinModel';
 import { incrementAndFetchOffices } from '../utils/incrementAndFetchOffices';
 import { incrementAndFetchOneOffice } from '../utils/incrementAndFetchOneOffice';
+import { uploadImageToS3 } from '../utils/s3client';
 
 // GET /api/office/:id
 export const getOffice = async (req: Request, res: Response) => {
@@ -71,12 +72,25 @@ export const getUserOffices = async (req: Request, res: Response) => {
 export const postOffice = async (req: Request, res: Response) => {
     const { name, location, price, size, lng, lat } = req.body
     const position = {lng: +lng, lat: +lat}
-    const imageUrl = `/uploads/${req.file?.filename}`;
+    let imageUrl = `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/`;
+
+    const file = req.file
+    if (!file) {
+        return res.status(400).send('No file uploaded');
+    }
 
     if (!name || !location || !position || !position.lng || !position.lat || !size || price == null) {
         return res.status(400).json({status: "Bad Request", message: "Missing required fields"})
     }
 
+     try {
+        const bucketName = process.env.S3_BUCKET_NAME!;
+        const key = `${Date.now()}-${file.originalname}`;
+        await uploadImageToS3(bucketName, key, file.buffer);
+        imageUrl += key
+    } catch (err) {
+        return res.status(500).send({ error: 'Upload failed', details: err });
+    }
     try {
         const newPin = new Pin({lng: position.lng, lat: position.lat})
         const pin = await newPin.save()
