@@ -7,7 +7,8 @@ export interface IUser extends Document {
     _id: Types.ObjectId,
     username: string,
     email: string,
-    password: string
+    password: string,
+    type: string
 
     comparePassword: (password: string) => Promise<boolean>
 }
@@ -28,6 +29,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         lowercase: true
     },
     password: {type: String, required: [true, "Password is required"]},
+    type: {type: String, required: [true, "Account type is required"]}
 })
 
 userSchema.pre("save", async function (next) {

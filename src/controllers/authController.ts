@@ -6,7 +6,7 @@ import passport from "passport"
 
 // GET /api/auth/
 export const getAuth = async (req: Request, res: Response) => {
-    return res.status(200).json({status: "OK",message: "Authenticated", _id: (req.user as IUser)._id})
+    return res.status(200).json({status: "OK",message: "Authenticated", type: (req.user as IUser).type, _id: (req.user as IUser)._id})
 }
 
 // GET /api/auth/me/
@@ -68,14 +68,14 @@ export const postLogin = async (req: Request, res: Response, next: NextFunction)
 
         req.logIn(user, (err) => {
             if (err) return next(err);
-            return res.status(200).json({status: "OK", _id: user._id, message: "Logged in successfully"})
+            return res.status(200).json({status: "OK", _id: user._id, type: user.type, message: "Logged in successfully"})
         })
     })(req, res, next)
 }
 
 // POST /api/auth/register/
 export const postRegister = async (req: Request, res: Response) => {
-    const {username, email, password} = req.body
+    const {username, email, password, type} = req.body
     try {
         const existingUser = await User.findOne({$or: [{username}, {email}]})
         if(existingUser) {
@@ -83,7 +83,7 @@ export const postRegister = async (req: Request, res: Response) => {
                 status: "Forbidden",
                 message: existingUser.email === email.toLowerCase() ? "Email already exists" : "Username already exists"})
         }
-        const newUser = new User({username, email, password})
+        const newUser = new User({username, email, password, type})
         await newUser.save()
 
         return res.status(200).json({status: "OK", message: "User created successfully"})
