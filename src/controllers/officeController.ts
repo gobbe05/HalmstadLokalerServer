@@ -26,18 +26,19 @@ export const getOffice = async (req: Request, res: Response) => {
 // GET /api/office?limit=iii
 // GET /api/office?search=sss
 // GET /api/office?dontincrement=bool
+// GET /api/office?type=string
 export const getAllOffices = async (req: Request, res: Response) => {
     try {
         const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined
-        let {search, dontincrement} = req.query
+        let {search, dontincrement, type} = req.query
         let offices;
 
-        const searchQuery = search ? {
-            $or: [
-                {name: {$regex: search, $options: "i"}},
-                {location: {$regex: search, $options: "i"}}
-            ]} : {}
-
+        let s: any = {$or:[]}
+        if(search)
+            s.$or = [...s.$or, {name: {$regex: search, $options: "i"}}, {location: {$regex: search, $options: "i"}}, {tags: {$regex: search, $options: "i"}}]
+        if(type)
+            s = {type: type, ...s}
+        const searchQuery = s
         // Checks that limit is a number
         if(limit !== undefined && isNaN(limit)) 
             return res.status(400).json({ status: "Bad Request", message: "Limit must be a number" });
@@ -70,7 +71,7 @@ export const getUserOffices = async (req: Request, res: Response) => {
 
 // POST /api/office/
 export const postOffice = async (req: Request, res: Response) => {
-    const { name, location, price, size, lng, lat } = req.body
+    const { name, location, price, size, type, lng, lat, tags } = req.body
     const position = {lng: +lng, lat: +lat}
     let imageUrl = `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/`;
 
@@ -79,7 +80,7 @@ export const postOffice = async (req: Request, res: Response) => {
         return res.status(400).send('No file uploaded');
     }
 
-    if (!name || !location || !position || !position.lng || !position.lat || !size || price == null) {
+    if (!name || !location || !position || !position.lng || !position.lat || !size || !type || price == null) {
         return res.status(400).json({status: "Bad Request", message: "Missing required fields"})
     }
 
@@ -101,6 +102,8 @@ export const postOffice = async (req: Request, res: Response) => {
             position: pin._id,
             image: imageUrl,
             price,
+            tags,
+            type,
             size,
             owner: (req.user as IUser)._id
         })
