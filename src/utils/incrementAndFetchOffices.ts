@@ -8,6 +8,7 @@ import Office, { IOffice } from '../models/officeModel'
  */
 export const incrementAndFetchOffices = async (
   filter: Record<string, unknown>, // Generic filter type
+  offset: number,
   limit?: number
 ): Promise<IOffice[]> => {
   try {
@@ -21,7 +22,7 @@ export const incrementAndFetchOffices = async (
     await Office.updateMany({ _id: { $in: ids } }, { $inc: { views: 1 } });
 
     // Fetch the updated documents
-    const updatedDocuments = limit ? await Office.find(filter).limit(limit) : await Office.find(filter)  
+    const updatedDocuments = limit ? await Office.find(filter).skip(offset).limit(limit) : await Office.find(filter).skip(offset)  
 
     return updatedDocuments; // Cast result to match the expected type
   } catch (error) {
