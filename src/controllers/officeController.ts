@@ -24,6 +24,7 @@ export const getOffice = async (req: Request, res: Response) => {
 
 // GET /api/office/
 // GET /api/office?limit=iii
+// GET /api/office?page=iii
 // GET /api/office?search=sss
 // GET /api/office?dontincrement=bool
 // GET /api/office?type=string
@@ -32,7 +33,10 @@ export const getOffice = async (req: Request, res: Response) => {
 export const getAllOffices = async (req: Request, res: Response) => {
     try {
         const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined
-        let {search, dontincrement, type, priceMin, priceMax, sizeMin, sizeMax} = req.query
+        const {search, dontincrement, type, priceMin, priceMax, sizeMin, sizeMax} = req.query
+        let page = req.query.page ? +req.query.page : 1;
+        const offset = limit ? (page-1) * limit : 0 
+
         let offices;
 
         // Build search query
@@ -61,9 +65,9 @@ export const getAllOffices = async (req: Request, res: Response) => {
 
         // Check views should be incremented or not
         if(dontincrement === "true")
-            offices = limit ? await Office.find(searchQuery).limit(limit) : await Office.find(searchQuery)
+            offices = limit ? await Office.find(searchQuery).skip(offset).limit(limit) : await Office.find(searchQuery).skip(offset)
         else
-            offices = limit ? await incrementAndFetchOffices(searchQuery, limit) : await incrementAndFetchOffices(searchQuery)
+            offices = limit ? await incrementAndFetchOffices(searchQuery, offset, limit) : await incrementAndFetchOffices(searchQuery, offset)
         return res.status(200).json({ status: "OK", offices}) // 200 OK
     } catch(e) {
         handleMongooseError(e as MongooseError, res);
