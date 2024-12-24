@@ -27,10 +27,10 @@ export const getOffice = async (req: Request, res: Response) => {
 // GET /api/office?page=iii
 // GET /api/office?search=sss
 // GET /api/office?dontincrement=bool
-// GET /api/office?type=string
+// GET /api/office?type=sss
 // GET /api/office?max=iii
 // GET /api/office?min=iii
-export const getAllOffices = async (req: Request, res: Response) => {
+export const getOffices = async (req: Request, res: Response) => {
     try {
         const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined
         const {search, dontincrement, type, priceMin, priceMax, sizeMin, sizeMax} = req.query
@@ -62,6 +62,8 @@ export const getAllOffices = async (req: Request, res: Response) => {
         // Checks that limit is a number
         if(limit !== undefined && isNaN(limit)) 
             return res.status(400).json({ status: "Bad Request", message: "Limit must be a number" });
+        // TODO : Add check for page
+
 
         // Check views should be incremented or not
         if(dontincrement === "true")
@@ -71,6 +73,45 @@ export const getAllOffices = async (req: Request, res: Response) => {
         return res.status(200).json({ status: "OK", offices}) // 200 OK
     } catch(e) {
         handleMongooseError(e as MongooseError, res);
+    }
+}
+
+// GET /api/office/count
+// GET /api/office/count?search=sss
+// GET /api/office/count?type=sss
+// GET /api/office/count?priceMin=iii
+// GET /api/office/count?priceMax=iii
+// GET /api/office/count?sizeMin=iii
+// GET /api/office/count?sizeMax=iii
+export const getOfficesCount = async (req: Request, res: Response) => {
+    try {
+        const {search, type, priceMin, priceMax, sizeMin, sizeMax} = req.query
+
+        // Build search query
+        let s: any = {$or:[]}
+        if(search)
+            s.$or = [...s.$or, {name: {$regex: search, $options: "i"}}, {location: {$regex: search, $options: "i"}}, {tags: {$regex: search, $options: "i"}}]
+        if(type)
+            s = {type: type, ...s}
+        if(priceMin || priceMax) {
+            let range = {}
+            if(priceMax) range = {...range, $lte: priceMax};
+            if(priceMin) range = {...range, $gte: priceMin};
+            s = {price: range, ...s}
+        } 
+        if(sizeMin || sizeMax) {
+            let range = {}
+            if(sizeMax) range = {...range, $lte: sizeMax}
+            if(sizeMin) range = {...range, $gte: sizeMin};
+            s = {size: range, ...s}
+        }
+        const searchQuery = s
+
+        const count = await Office.countDocuments(searchQuery)
+
+        return res.status(200).json({status: "OK", count})
+    } catch(e) {
+        handleMongooseError(e as MongooseError, res)
     }
 }
 
