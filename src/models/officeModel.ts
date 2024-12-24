@@ -4,6 +4,7 @@ import '../models/pinModel';
 
 export interface IOffice extends Document {
     name: string,
+    description: string,
     location: string,
     position: ICoordinates,
     price: number,
@@ -18,6 +19,7 @@ export interface IOffice extends Document {
 
 const officeSchema = new Schema<IOffice>({
     name: { type: String, required: true },
+    description: {type: String, required: true},
     location: {type: String, required: true},
     position: {
         type: Schema.Types.ObjectId, 

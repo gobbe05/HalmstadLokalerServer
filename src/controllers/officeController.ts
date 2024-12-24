@@ -27,18 +27,34 @@ export const getOffice = async (req: Request, res: Response) => {
 // GET /api/office?search=sss
 // GET /api/office?dontincrement=bool
 // GET /api/office?type=string
+// GET /api/office?max=iii
+// GET /api/office?min=iii
 export const getAllOffices = async (req: Request, res: Response) => {
     try {
         const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined
-        let {search, dontincrement, type} = req.query
+        let {search, dontincrement, type, priceMin, priceMax, sizeMin, sizeMax} = req.query
         let offices;
 
+        // Build search query
         let s: any = {$or:[]}
         if(search)
             s.$or = [...s.$or, {name: {$regex: search, $options: "i"}}, {location: {$regex: search, $options: "i"}}, {tags: {$regex: search, $options: "i"}}]
         if(type)
             s = {type: type, ...s}
+        if(priceMin || priceMax) {
+            let range = {}
+            if(priceMax) range = {...range, $lte: priceMax};
+            if(priceMin) range = {...range, $gte: priceMin};
+            s = {price: range, ...s}
+        } 
+        if(sizeMin || sizeMax) {
+            let range = {}
+            if(sizeMax) range = {...range, $lte: sizeMax}
+            if(sizeMin) range = {...range, $gte: sizeMin};
+            s = {size: range, ...s}
+        }
         const searchQuery = s
+
         // Checks that limit is a number
         if(limit !== undefined && isNaN(limit)) 
             return res.status(400).json({ status: "Bad Request", message: "Limit must be a number" });
@@ -71,7 +87,7 @@ export const getUserOffices = async (req: Request, res: Response) => {
 
 // POST /api/office/
 export const postOffice = async (req: Request, res: Response) => {
-    const { name, location, price, size, type, lng, lat, tags } = req.body
+    const { name, description, location, price, size, type, lng, lat, tags } = req.body
     const position = {lng: +lng, lat: +lat}
     let imageUrl = `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/`;
 
@@ -80,7 +96,7 @@ export const postOffice = async (req: Request, res: Response) => {
         return res.status(400).send('No file uploaded');
     }
 
-    if (!name || !location || !position || !position.lng || !position.lat || !size || !type || price == null) {
+    if (!name || !description || !location || !position || !position.lng || !position.lat || !size || !type || price == null) {
         return res.status(400).json({status: "Bad Request", message: "Missing required fields"})
     }
 
@@ -98,6 +114,7 @@ export const postOffice = async (req: Request, res: Response) => {
         if(!pin) return res.status(500).json({status: "Internal error", msg: "There was an error creating pin"})
         const newOffice = new Office({
             name,
+            description,
             location,
             position: pin._id,
             image: imageUrl,
