@@ -11,6 +11,7 @@ export interface IOffice extends Document {
     tags: Array<string>,
     type: String,
     image: String,
+    thumbnail: String,
     size: number,
     owner: Types.ObjectId,
     views: number,
@@ -27,6 +28,7 @@ const officeSchema = new Schema<IOffice>({
     tags: {type: [String], default: []},
     type: {type: String, required: true},
     image: {type: String, required: true},
+    thumbnail: {type: String, required: true},
     price: { type: Number },
     size: { type: Number, required: true },
     owner: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to the users _id

@@ -1,4 +1,4 @@
-import { ObjectCannedACL, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import dotenv from 'dotenv'
 dotenv.config();
 
@@ -21,7 +21,6 @@ export const uploadImageToS3 = async (bucketName: string, key: string, fileBuffe
     try {
         const command = new PutObjectCommand(uploadParams);
         const response = await s3.send(command);
-        console.log('Upload Success', response);
     } catch (err) {
         console.error('Upload Error', err);
     }
