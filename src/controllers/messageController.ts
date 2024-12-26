@@ -78,6 +78,9 @@ export const postFirstMessage = async (req: Request, res: Response) => {
     const {message, subject, broker} = req.body
 
     try {
+        // Check that user is a buyer
+        if((req.user as IUser).type != "buyer") return res.status(401).json({status: "Unauthorized", msg: "Bara köpare kan starta en konversation"})
+
         // Check that broker exists
         const testBroker = await User.find({_id: broker})
         !testBroker && res.status(400).json({status: "Bad Request", msg: "Broker doesn't exist"})
