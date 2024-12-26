@@ -7,6 +7,7 @@ import Pin from '../models/pinModel';
 import { incrementAndFetchOffices } from '../utils/incrementAndFetchOffices';
 import { incrementAndFetchOneOffice } from '../utils/incrementAndFetchOneOffice';
 import { uploadImageToS3 } from '../utils/s3client';
+import sharp from 'sharp';
 
 // GET /api/office/:id
 export const getOffice = async (req: Request, res: Response) => {
@@ -135,11 +136,12 @@ export const postOffice = async (req: Request, res: Response) => {
     const { name, description, location, price, size, type, lng, lat, tags } = req.body
     const position = {lng: +lng, lat: +lat}
     let imageUrl = `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/`;
+    let thumbnailUrl = `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/`;
 
     const file = req.file
-    if (!file) {
-        return res.status(400).send('No file uploaded');
-    }
+    if (!file) return res.status(400).send('No file uploaded');
+
+    const thumbnail = await sharp(file.buffer).resize(200).toBuffer()
 
     if (!name || !description || !location || !position || !position.lng || !position.lat || !size || !type || price == null) {
         return res.status(400).json({status: "Bad Request", message: "Missing required fields"})
@@ -147,9 +149,15 @@ export const postOffice = async (req: Request, res: Response) => {
 
      try {
         const bucketName = process.env.S3_BUCKET_NAME!;
+
         const key = `${Date.now()}-${file.originalname}`;
+        const thumbnailKey = `thumbnail-${Date.now()}-${file.originalname}`;
+
         await uploadImageToS3(bucketName, key, file.buffer);
+        await uploadImageToS3(bucketName, thumbnailKey, thumbnail);
+
         imageUrl += key
+        thumbnailUrl += thumbnailKey
     } catch (err) {
         return res.status(500).send({ error: 'Upload failed', details: err });
     }
@@ -163,6 +171,7 @@ export const postOffice = async (req: Request, res: Response) => {
             location,
             position: pin._id,
             image: imageUrl,
+            thumbnail: thumbnailUrl,
             price,
             tags,
             type,
