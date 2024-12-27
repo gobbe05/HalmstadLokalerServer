@@ -133,7 +133,9 @@ export const getUserOffices = async (req: Request, res: Response) => {
 
 // POST /api/office/
 export const postOffice = async (req: Request, res: Response) => {
-    const { name, description, location, price, size, type, lng, lat, tags } = req.body
+    const { name, description, location, price, size, type, lng, lat } = req.body
+    let {tags} = req.body
+    tags = JSON.parse(tags)
     const position = {lng: +lng, lat: +lat}
     let imageUrl = `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/`;
     let thumbnailUrl = `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/`;
