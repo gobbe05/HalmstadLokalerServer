@@ -13,6 +13,7 @@ import conversationRoutes from './routes/conversationRoutes';
 import isAuthenticated from './middleware/isAuthenticated';
 import statisticRoutes from './routes/statisticRoutes';
 import fs from "fs"
+import savedOfficeRoutes from './routes/savedOfficeRoutes';
 
 const app: Application = express();
 
@@ -54,6 +55,7 @@ app.use('/api/conversation', conversationRoutes)
 app.use('/api/office', officeRoutes)
 app.use('/api/savedsearch', savedSearchRoutes)
 app.use('/api/pin', pinRoutes)
+app.use('/api/saved', savedOfficeRoutes)
 app.use('/auth', authRoutes)
 
 // Catch-all handler for any requests that don’t match the static files
