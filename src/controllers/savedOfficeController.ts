@@ -24,13 +24,24 @@ export const getSavedOfficesForUser = async (req: Request, res: Response) => {
   }
 }
 
+export const getSavedOfficeState = async (req: Request, res: Response) => {
+    const id = (req.user as IUser)._id
+    const {office} = req.params
+    try {
+        const saveCheck = await SavedOffice.findOne({user:id, office})
+        if(saveCheck) return res.status(200).json({status: "OK", saved: true});
+        return res.status(200).json({status: "OK", saved: false});
+    } catch(e) {
+        handleMongooseError(e as MongooseError, res)
+    }
+}
+
 export const postSavedOffice = async (req: Request, res: Response) => {
     try {
         const id = (req.user as IUser)._id
         const {office} = req.body
-
+        console.log(office)
         const checkSavedOffice = await SavedOffice.findOne({user: id, office})
-        console.log(checkSavedOffice)
         if(checkSavedOffice) return res.status(400).json({status: "Bad Request", msg: "You have already saved this office"})
         
         const newSavedOffice = new SavedOffice({
@@ -47,7 +58,7 @@ export const postSavedOffice = async (req: Request, res: Response) => {
 export const deleteSavedOffice = async (req: Request, res: Response) => {
     try {
         const id = (req.user as IUser)._id
-        const {office} = req.body
+        const {office} = req.params
         
         const removeSave = await SavedOffice.findOneAndDelete({user: id, office: office})
         if(removeSave) return res.status(404).json({status: "Not Found", msg: "Saved office couldn't be found"})
