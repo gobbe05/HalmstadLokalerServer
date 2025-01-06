@@ -29,8 +29,6 @@ export const getMessage = async (req: Request, res: Response) => {
         const userid = (req.user as IUser)._id
         const message = await Message.findOne({_id: id})
         if(!message) return res.status(404).json({status: "Not Found", msg: "Message couldn't be found"});
-        console.log("Message: " + message)
-        console.log("Userid: " + userid)
         if(!new Types.ObjectId(userid).equals(message.receiver)) return res.status(401).json({status: "Unauthorized", msg: "You don't have access to this message"});
         return res.status(200).json({status: "OK", message})
     } catch(e) {
