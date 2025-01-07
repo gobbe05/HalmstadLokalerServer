@@ -1,6 +1,7 @@
-import mongoose, { Document, Schema, Types } from 'mongoose';
+import mongoose, { CallbackError, Document, Schema, Types } from 'mongoose';
 import ICoordinates from '../interfaces/ICoordinates';
 import '../models/pinModel';
+import { NextFunction } from 'express';
 
 export interface IOffice extends Document {
     name: string,
@@ -15,7 +16,8 @@ export interface IOffice extends Document {
     size: number,
     owner: Types.ObjectId,
     views: number,
-    visits: number
+    visits: number,
+    hidden: boolean
 }
 
 const officeSchema = new Schema<IOffice>({
@@ -33,10 +35,25 @@ const officeSchema = new Schema<IOffice>({
     size: { type: Number, required: true },
     owner: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to the users _id
     views: { type: Number, default: 0},
-    visits: {type: Number, default: 0}
+    visits: {type: Number, default: 0},
+    hidden: {type: Boolean, default: false}
 })
 
 officeSchema.index({name: "text", location: "text"})
+
+officeSchema.pre('findOneAndDelete', async function (next) {
+  try {
+    const query = this; // `this` refers to the query
+    const office = await query.model.findOne(query.getQuery());
+    if (office) {
+        await mongoose.model("Pin").deleteOne({ _id: office.position });
+        await mongoose.model('savedoffice').deleteMany({ office: office._id });
+    }
+    next();
+  } catch (err) {
+    next();
+  }
+});
 
 const Office = mongoose.model<IOffice>('Office', officeSchema);
 export default Office
