@@ -17,8 +17,12 @@ export const getSavedOfficesForUser = async (req: Request, res: Response) => {
     const id = (req.user as IUser)._id
   try {
     const offices = await SavedOffice.find({ user: id})
-      .populate('office') // Populates the office details
-    return res.status(200).json({status: "OK", offices});
+        .populate({
+            path: 'office',
+            match: {hidden: false}
+        }) // Populates the office details
+    const visibleOffices = offices.filter(office => office.office !== null)
+    return res.status(200).json({status: "OK", offices: visibleOffices});
   } catch (e) {
     handleMongooseError(e as MongooseError, res)
   }
@@ -40,7 +44,6 @@ export const postSavedOffice = async (req: Request, res: Response) => {
     try {
         const id = (req.user as IUser)._id
         const {office} = req.body
-        console.log(office)
         const checkSavedOffice = await SavedOffice.findOne({user: id, office})
         if(checkSavedOffice) return res.status(400).json({status: "Bad Request", msg: "You have already saved this office"})
         

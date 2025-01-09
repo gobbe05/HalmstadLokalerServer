@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { deleteOffice, getOffices, getOffice, getUserOffices, postOffice, putOffice, getOfficesCount} from '../controllers/officeController';
+import { deleteOffice, getOffices, getOffice, getUserOffices, postOffice, putOffice, getOfficesCount, putOfficeHidden} from '../controllers/officeController';
 import isAuthenticated from '../middleware/isAuthenticated';
 import multer, { StorageEngine, FileFilterCallback } from 'multer';
 
@@ -24,6 +24,7 @@ const upload = multer({
 router.get('/', getOffices)
 router.get('/count', getOfficesCount)
 router.get('/:id', getOffice)
+router.get("/:id/hidden", isAuthenticated, putOfficeHidden)
 router.get('/user/:id', getUserOffices)
 
 router.put("/:id", isAuthenticated, putOffice)

@@ -13,7 +13,7 @@ import sharp from 'sharp';
 export const getOffice = async (req: Request, res: Response) => {
     try {
         const {id} = req.params
-        const office = await incrementAndFetchOneOffice({_id: id})
+        const office = await incrementAndFetchOneOffice({_id: id, hidden: false})
 
         if(!office) return res.status(404).json({status: "Not Found"})
 
@@ -41,7 +41,7 @@ export const getOffices = async (req: Request, res: Response) => {
         let offices;
 
         // Build search query
-        let s: any = {$or:[]}
+        let s: any = {hidden: false, $or:[]}
         if(search)
             s.$or = [...s.$or, {name: {$regex: search, $options: "i"}}, {location: {$regex: search, $options: "i"}}, {tags: {$regex: search, $options: "i"}}]
         if(type)
@@ -89,7 +89,7 @@ export const getOfficesCount = async (req: Request, res: Response) => {
         const {search, type, priceMin, priceMax, sizeMin, sizeMax} = req.query
 
         // Build search query
-        let s: any = {$or:[]}
+        let s: any = {hidden: false, $or:[]}
         if(search)
             s.$or = [...s.$or, {name: {$regex: search, $options: "i"}}, {location: {$regex: search, $options: "i"}}, {tags: {$regex: search, $options: "i"}}]
         if(type)
@@ -215,6 +215,19 @@ export const putOffice = async (req: Request, res: Response) => {
         return res.status(200).json({status: "OK",office: updatedOffice})
     } catch(e) {
        handleMongooseError(e as MongooseError, res) 
+    }
+}
+
+export const putOfficeHidden = async (req: Request, res: Response) => {
+    try {
+        const {id} = req.params
+        const office = await Office.findOne({_id: id, owner: (req.user as IUser)._id})
+        if(!office) return res.status(404).json({status: "Not Found", message: "No ownership of office with id"})
+        office.hidden = !office.hidden
+        await office.save()
+        return res.status(200).json({status: "OK", office})
+    } catch(e) {
+        handleMongooseError(e as MongooseError, res)
     }
 }
 
