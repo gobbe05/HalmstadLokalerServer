@@ -67,6 +67,19 @@ export const postMessage = async (req: Request, res: Response) => {
     }
 }
 
+// DELETE /api/message/:id
+export const deleteMessage = async (req: Request, res: Response) => {
+    const {id} = req.params
+    try {
+        const userid = (req.user as IUser)._id
+        const message = await Message.findOneAndDelete({_id: id, receiver: userid})
+        if(!message) return res.status(404).json({status: "Not Found", msg: "Message couldn't be found"});
+        return res.status(200).json({status: "OK", message})
+    } catch(e) {
+        handleMongooseError(e as MongooseError, res)
+    }
+}
+
 /* This type of message logic is not used/needed anymore */
 /*
 // GET /api/message/latest/:id

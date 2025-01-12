@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllMessages, getMessage, getMessages, postMessage } from "../controllers/messageController";
+import { deleteMessage, getAllMessages, getMessage, getMessages, postMessage } from "../controllers/messageController";
 import isAuthenticated from "../middleware/isAuthenticated";
 
 const router = Router()
@@ -13,5 +13,7 @@ router.get("/", isAuthenticated, getMessages)
 
 router.post("/", isAuthenticated, postMessage)
 //router.post("/first", isAuthenticated, postFirstMessage)
+
+router.delete("/:id", isAuthenticated, deleteMessage)
 
 export default router
