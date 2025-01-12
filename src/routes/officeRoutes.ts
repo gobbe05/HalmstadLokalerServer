@@ -1,13 +1,8 @@
 import { Router } from 'express';
 import { deleteOffice, getOffices, getOffice, getUserOffices, postOffice, putOffice, getOfficesCount, putOfficeHidden} from '../controllers/officeController';
 import isAuthenticated from '../middleware/isAuthenticated';
-import multer, { StorageEngine, FileFilterCallback } from 'multer';
-
-
+import multer from 'multer';
 const router = Router();
-
-
-
 
 const storage = multer.memoryStorage(); // Store files in memory temporarily
 
@@ -29,7 +24,7 @@ router.get('/user/:id', getUserOffices)
 
 router.put("/:id", isAuthenticated, putOffice)
 
-router.post('/', isAuthenticated, upload.single("image"), postOffice)
+router.post('/', isAuthenticated, upload.array("images[]", 10), postOffice)
 
 router.delete('/:id', isAuthenticated, deleteOffice)
 //router.delete('/', deleteAllOffices)

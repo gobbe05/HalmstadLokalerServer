@@ -1,7 +1,6 @@
-import mongoose, { CallbackError, Document, Schema, Types } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 import ICoordinates from '../interfaces/ICoordinates';
 import '../models/pinModel';
-import { NextFunction } from 'express';
 
 export interface IOffice extends Document {
     name: string,
@@ -11,8 +10,8 @@ export interface IOffice extends Document {
     price: number,
     tags: Array<string>,
     type: String,
-    image: String,
-    thumbnail: String,
+    images: String,
+    thumbnails: String,
     size: number,
     owner: Types.ObjectId,
     views: number,
@@ -29,8 +28,8 @@ const officeSchema = new Schema<IOffice>({
         ref: 'Pin'},
     tags: {type: [String], default: []},
     type: {type: String, required: true},
-    image: {type: String, required: true},
-    thumbnail: {type: String, required: true},
+    images: {type: [String], required: true},
+    thumbnails: {type: [String], required: true},
     price: { type: Number },
     size: { type: Number, required: true },
     owner: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to the users _id
