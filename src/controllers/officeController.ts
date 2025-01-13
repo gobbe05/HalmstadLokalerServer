@@ -137,29 +137,37 @@ export const postOffice = async (req: Request, res: Response) => {
     let {tags} = req.body
     tags = JSON.parse(tags)
     const position = {lng: +lng, lat: +lat}
+
     let imageUrl = `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/`;
     let thumbnailUrl = `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/`;
+    let imageUrls;
 
-    const file = req.file
-    if (!file) return res.status(400).send('No file uploaded');
-
-    const thumbnail = await sharp(file.buffer).resize(200).toBuffer()
+    if(!req.files || !Array.isArray(req.files) || req.files.length === 0) return res.status(400).send('No files uploaded');
+    const files = req.files as Express.Multer.File[] 
 
     if (!name || !description || !location || !position || !position.lng || !position.lat || !size || !type || price == null) {
         return res.status(400).json({status: "Bad Request", message: "Missing required fields"})
     }
 
-     try {
+    try {
         const bucketName = process.env.S3_BUCKET_NAME!;
+        imageUrls = await Promise.all(files.map(async (file) => {
+            if (!file.mimetype.startsWith('image/')) {
+                throw new Error('Invalid file type');
+            }
 
-        const key = `${Date.now()}-${file.originalname}`;
-        const thumbnailKey = `thumbnail-${Date.now()}-${file.originalname}`;
+            const thumbnail = await sharp(file.buffer).resize(200).toBuffer()
+            const key = `${Date.now()}-${file.originalname}`;
+            const thumbnailKey = `thumbnail-${Date.now()}-${file.originalname}`;
+            
+            await uploadImageToS3(bucketName, key, file.buffer);
+            await uploadImageToS3(bucketName, thumbnailKey, thumbnail);   
 
-        await uploadImageToS3(bucketName, key, file.buffer);
-        await uploadImageToS3(bucketName, thumbnailKey, thumbnail);
-
-        imageUrl += key
-        thumbnailUrl += thumbnailKey
+            return {
+                imageUrl: `${imageUrl}${key}`,
+                thumbnailUrl: `${thumbnailUrl}${thumbnailKey}`
+            }
+        }))         
     } catch (err) {
         return res.status(500).send({ error: 'Upload failed', details: err });
     }
@@ -172,8 +180,8 @@ export const postOffice = async (req: Request, res: Response) => {
             description,
             location,
             position: pin._id,
-            image: imageUrl,
-            thumbnail: thumbnailUrl,
+            images: imageUrls.map(urls => urls.imageUrl),
+            thumbnails: imageUrls.map(urls => urls.thumbnailUrl),
             price,
             tags,
             type,
