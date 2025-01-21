@@ -25,3 +25,18 @@ export const uploadImageToS3 = async (bucketName: string, key: string, fileBuffe
         console.error('Upload Error', err);
     }
 };
+export const uploadDocumentToS3 = async (bucketName: string, key: string, fileBuffer: Buffer) => {
+    const uploadParams = {
+        Bucket: bucketName,
+        Key: key,
+        Body: fileBuffer,
+        ContentType: 'application/pdf', // Adjust based on your file type
+    };
+
+    try {
+        const command = new PutObjectCommand(uploadParams);
+        const response = await s3.send(command);
+    } catch (err) {
+        console.error('Upload Error', err);
+    }
+}

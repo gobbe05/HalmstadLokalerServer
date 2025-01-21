@@ -9,12 +9,17 @@ const storage = multer.memoryStorage(); // Store files in memory temporarily
 const upload = multer({
     storage,
     fileFilter: (req, file, cb) => {
-        if (!file.mimetype.startsWith('image/')) {
+        if (!file.mimetype.startsWith('image/') && !file.mimetype.startsWith("application/pdf")) {
             return cb(null, false);
         }
         cb(null, true);
     },
 });
+
+const uploadFields = upload.fields([
+    { name: "images[]", maxCount: 10 },
+    { name: "files[]", maxCount: 10 }
+]);
 
 router.get('/', getOffices)
 router.get('/count', getOfficesCount)
@@ -24,7 +29,7 @@ router.get('/user/:id', getUserOffices)
 
 router.put("/:id", isAuthenticated, putOffice)
 
-router.post('/', isAuthenticated, upload.array("images[]", 10), postOffice)
+router.post('/', isAuthenticated, uploadFields, postOffice)
 
 router.delete('/:id', isAuthenticated, deleteOffice)
 //router.delete('/', deleteAllOffices)

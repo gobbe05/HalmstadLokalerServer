@@ -6,8 +6,8 @@ import { IUser } from '../models/userModel';
 import Pin from '../models/pinModel';
 import { incrementAndFetchOffices } from '../utils/incrementAndFetchOffices';
 import { incrementAndFetchOneOffice } from '../utils/incrementAndFetchOneOffice';
-import { uploadImageToS3 } from '../utils/s3client';
-import sharp from 'sharp';
+import uploadImage from '../utils/officeController/uploadImage';
+import uploadDocument from '../utils/officeController/uploadDocument';
 
 // GET /api/office/:id
 export const getOffice = async (req: Request, res: Response) => {
@@ -138,36 +138,30 @@ export const postOffice = async (req: Request, res: Response) => {
     tags = JSON.parse(tags)
     const position = {lng: +lng, lat: +lat}
 
-    let imageUrl = `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/`;
-    let thumbnailUrl = `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/`;
+    let baseUrl = `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/`;
     let imageUrls;
+    let documentUrls;
 
-    if(!req.files || !Array.isArray(req.files) || req.files.length === 0) return res.status(400).send('No files uploaded');
-    const files = req.files as Express.Multer.File[] 
+    const files = req.files as {[fieldname: string]: Express.Multer.File[]}
+
+    if (!files || !files['images[]'] || !Array.isArray(files['images[]']) || files['images[]'].length === 0) {
+        return res.status(400).json({status: "Bad Request", message: "Missing image files"})
+    }
+
+    const imageFiles = files["images[]"];
+    const documentFiles = files["files[]"] || [];
 
     if (!name || !description || !location || !position || !position.lng || !position.lat || !size || !type || price == null) {
         return res.status(400).json({status: "Bad Request", message: "Missing required fields"})
     }
 
     try {
-        const bucketName = process.env.S3_BUCKET_NAME!;
-        imageUrls = await Promise.all(files.map(async (file) => {
-            if (!file.mimetype.startsWith('image/')) {
-                throw new Error('Invalid file type');
-            }
-
-            const thumbnail = await sharp(file.buffer).resize(200).toBuffer()
-            const key = `${Date.now()}-${file.originalname}`;
-            const thumbnailKey = `thumbnail-${Date.now()}-${file.originalname}`;
-            
-            await uploadImageToS3(bucketName, key, file.buffer);
-            await uploadImageToS3(bucketName, thumbnailKey, thumbnail);   
-
-            return {
-                imageUrl: `${imageUrl}${key}`,
-                thumbnailUrl: `${thumbnailUrl}${thumbnailKey}`
-            }
-        }))         
+        imageUrls = await Promise.all(imageFiles.map(async (file) => {
+            return await uploadImage(file, baseUrl)
+        }))
+        documentUrls = await Promise.all(documentFiles.map(async (file) => {
+            return await uploadDocument(file, baseUrl)
+        })) 
     } catch (err) {
         return res.status(500).send({ error: 'Upload failed', details: err });
     }
@@ -181,6 +175,7 @@ export const postOffice = async (req: Request, res: Response) => {
             location,
             position: pin._id,
             images: imageUrls.map(urls => urls.imageUrl),
+            documents: documentUrls.map(urls => urls.documentUrl),
             thumbnails: imageUrls.map(urls => urls.thumbnailUrl),
             price,
             tags,
