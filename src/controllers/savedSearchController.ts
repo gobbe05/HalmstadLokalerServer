@@ -19,7 +19,7 @@ export const getSavedSearch = async (req: Request, res: Response) => {
 export const getIfInSavedSearch = async (req: Request, res: Response) => {
     try {
         const {search} = req.query
-        const savedSearches = await SavedSearch.find({searchString: search})
+        const savedSearches = await SavedSearch.find({searchString: search, user: (req.user as IUser)._id})
         if(!savedSearches.length) return res.status(200).json({status: "OK", inSavedSearch: false});
         return res.status(200).json({status: "OK", inSavedSearch: true})
     } catch(e) {
