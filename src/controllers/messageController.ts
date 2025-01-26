@@ -48,6 +48,7 @@ export const postMessage = async (req: Request, res: Response) => {
         const userid = (req.user as IUser)._id
         const userType = (req.user as IUser).type
 
+        if(userid == receiver) return res.status(400).json({status: "Bad Request", msg: "You can't send a message to yourself"})
         if(userType != "buyer") return res.status(401).json({status: "Unauthorized", msg: "You must be a buyer to send messages"})
 
         // Create message

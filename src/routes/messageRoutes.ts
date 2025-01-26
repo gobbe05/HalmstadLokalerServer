@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteMessage, getAllMessages, getMessage, getMessages, postMessage } from "../controllers/messageController";
+import { deleteMessage, getMessage, getMessages, postMessage } from "../controllers/messageController";
 import isAuthenticated from "../middleware/isAuthenticated";
 
 const router = Router()
