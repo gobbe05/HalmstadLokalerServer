@@ -13,7 +13,7 @@ export const incrementAndFetchOneOffice = async (
     await Office.updateOne(filter, { $inc: { visits: 1 } });
 
     // Fetch the updated documents
-    const office = await Office.findOne(filter);  
+    const office = await Office.findOne(filter).populate('position');  
 
     return office as IOffice; // Cast result to match the expected type
   } catch (error) {

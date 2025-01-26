@@ -27,7 +27,7 @@ router.get('/:id', getOffice)
 router.get("/:id/hidden", isAuthenticated, putOfficeHidden)
 router.get('/user/:id', getUserOffices)
 
-router.put("/:id", isAuthenticated, putOffice)
+router.put("/:id", isAuthenticated, uploadFields, putOffice)
 
 router.post('/', isAuthenticated, uploadFields, postOffice)
 

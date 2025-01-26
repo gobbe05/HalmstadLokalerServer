@@ -13,6 +13,7 @@ import conversationRoutes from './routes/conversationRoutes';
 import isAuthenticated from './middleware/isAuthenticated';
 import statisticRoutes from './routes/statisticRoutes';
 import savedOfficeRoutes from './routes/savedOfficeRoutes';
+import bodyParser from 'body-parser';
 
 const app: Application = express();
 
@@ -21,6 +22,7 @@ app.use(cors({
     origin: ORIGIN,
     credentials: true}));
 app.use(express.json());
+app.use(bodyParser.urlencoded({extended: true}));
 
 
 

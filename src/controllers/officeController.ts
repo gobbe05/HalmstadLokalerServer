@@ -8,6 +8,8 @@ import { incrementAndFetchOffices } from '../utils/incrementAndFetchOffices';
 import { incrementAndFetchOneOffice } from '../utils/incrementAndFetchOneOffice';
 import uploadImage from '../utils/officeController/uploadImage';
 import uploadDocument from '../utils/officeController/uploadDocument';
+import { uploadImageToS3 } from '../utils/s3client';
+import sharp from 'sharp';
 
 // GET /api/office/:id
 export const getOffice = async (req: Request, res: Response) => {
@@ -195,17 +197,80 @@ export const postOffice = async (req: Request, res: Response) => {
 export const putOffice = async (req: Request, res: Response) => {
     try {
         const {id} = req.params
-        const {name, location, size, price, position} = req.body
-
-        // Dynamically build the update object with only defined fields
-        const updateFields: Partial<{ name: string; location: string; size: number; price: number; position: string }> = {};
+        const { name, description, price, size, type, existingImages, existingDocuments, existingThumbnails } = req.body
+        let {tags} = req.body
+        tags = JSON.parse(tags)
         
-        if (name        !== undefined) updateFields.name = name;
-        if (location    !== undefined) updateFields.location = location;
-        if (size        !== undefined) updateFields.size = size;
-        if (price       !== undefined) updateFields.price = price;
-        if (price       !== undefined) updateFields.price = price;
+        const updateFields: Partial<{ name: string; description: string; price: number; size: number; type: string; tags: string[]; images: string[]; thumbnails: string[]; documents: string[] }> = {};
 
+        if (name        !== undefined) updateFields.name = name;
+        if (description !== undefined) updateFields.description = description;
+        if (price       !== undefined) updateFields.price = price;
+        if (size        !== undefined) updateFields.size = size;
+        if (type        !== undefined) updateFields.type = type;
+        if (tags        !== undefined) updateFields.tags = tags;
+        
+        // Handle existing images and documents
+        if (existingImages) updateFields.images = existingImages;
+        if (existingDocuments) updateFields.documents = existingDocuments;
+        if (existingThumbnails) updateFields.thumbnails = existingThumbnails;
+        
+        const files = req.files as {[fieldname: string]: Express.Multer.File[]}
+        
+        // Handle new file uploads
+        if (files && files['images[]'] && Array.isArray(files['images[]']) && files['images[]'].length > 0) {
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            const imageFiles = files['images[]'];
+
+            const imageUrls = await Promise.all(imageFiles.map(async (file) => {
+                if (!file.mimetype.startsWith('image/')) {
+                    throw new Error('Invalid file type');
+                }
+
+                const imageBuffer = await sharp(file.buffer)
+                    .resize({ width: 800, height: 600 })
+                    .toBuffer();
+
+                const thumbnailBuffer = await sharp(file.buffer)
+                    .resize(200)
+                    .toBuffer();
+
+                const bucketName = process.env.S3_BUCKET_NAME!;
+                const key = `${Date.now()}-${file.originalname}`;
+                const thumbnailKey = `thumbnail-${Date.now()}-${file.originalname}`;
+
+                await uploadImageToS3(bucketName, key, imageBuffer);
+                await uploadImageToS3(bucketName, thumbnailKey, thumbnailBuffer);
+
+                return {
+                    imageUrl: `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/${key}`,
+                    thumbnailUrl: `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/${thumbnailKey}`
+                };
+            }));
+
+            updateFields.images = [...(updateFields.images || []), ...imageUrls.map(urls => urls.imageUrl)];
+            updateFields.thumbnails = [...(updateFields.thumbnails || []), ...imageUrls.map(urls => urls.thumbnailUrl)]
+        }
+
+        if (files && files['files[]'] && Array.isArray(files['files[]']) && files['files[]'].length > 0) {
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            const documentFiles = files['files[]'];
+
+            const documentUrls = await Promise.all(documentFiles.map(async (file) => {
+                if (!file.mimetype.startsWith('application/')) {
+                    throw new Error('Invalid file type');
+                }
+
+                const bucketName = process.env.S3_BUCKET_NAME!;
+                const key = `${Date.now()}-${file.originalname}`;
+
+                await uploadImageToS3(bucketName, key, file.buffer);
+
+                return `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/${key}`;
+            }));
+
+            updateFields.documents = [...(updateFields.documents || []), ...documentUrls];
+        }
         // Find and update the office document with the constructed updateFields
         const updatedOffice = await Office.findOneAndUpdate(
             {_id: id, owner: (req.user as IUser)._id},
@@ -217,6 +282,7 @@ export const putOffice = async (req: Request, res: Response) => {
 
         return res.status(200).json({status: "OK",office: updatedOffice})
     } catch(e) {
+        console.error(e)
        handleMongooseError(e as MongooseError, res) 
     }
 }
