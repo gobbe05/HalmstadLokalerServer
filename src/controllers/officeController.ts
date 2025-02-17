@@ -205,7 +205,6 @@ export const putOffice = async (req: Request, res: Response) => {
 
         if (name        !== undefined) updateFields.name = name;
         if (description !== undefined) updateFields.description = description;
-        if (price       !== undefined) updateFields.price = price;
         if (size        !== undefined) updateFields.size = size;
         if (type        !== undefined) updateFields.type = type;
         if (tags        !== undefined) updateFields.tags = tags;
