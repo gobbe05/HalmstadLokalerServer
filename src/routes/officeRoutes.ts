@@ -9,11 +9,19 @@ const storage = multer.memoryStorage(); // Store files in memory temporarily
 const upload = multer({
     storage,
     fileFilter: (req, file, cb) => {
-        if (!file.mimetype.startsWith('image/') && !file.mimetype.startsWith("application/pdf")) {
-            return cb(null, false);
+        if(file.fieldname == "images[]") {
+            if(!file.mimetype.startsWith('image/')) {
+                return cb(null, false);
+            }
+        }
+        if(file.fieldname == "files[]") {
+            if(!file.mimetype.startsWith('application/pdf')) {
+                return cb(null, false);
+            }
         }
         cb(null, true);
     },
+    limits: { fileSize: 5 * 1024 * 1024 } // example: limit file size to 5 MB per file
 });
 
 const uploadFields = upload.fields([
