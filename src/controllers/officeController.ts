@@ -201,11 +201,10 @@ export const putOffice = async (req: Request, res: Response) => {
         let {tags} = req.body
         tags = JSON.parse(tags)
         
-        const updateFields: Partial<{ name: string; description: string; size: number; type: string; tags: string[]; images: string[]; thumbnails: string[]; documents: string[] }> = {};
+        const updateFields: Partial<{ name: string; description: string; price: number; size: number; type: string; tags: string[]; images: string[]; thumbnails: string[]; documents: string[] }> = {};
 
         if (name        !== undefined) updateFields.name = name;
         if (description !== undefined) updateFields.description = description;
-        if (price       !== undefined) updateFields.price = price;
         if (size        !== undefined) updateFields.size = size;
         if (type        !== undefined) updateFields.type = type;
         if (tags        !== undefined) updateFields.tags = tags;
