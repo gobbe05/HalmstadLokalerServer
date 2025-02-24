@@ -4,8 +4,8 @@ import { MongooseError} from 'mongoose';
 import handleMongooseError from '../utils/errorHandler';
 import { IUser } from '../models/userModel';
 import Pin from '../models/pinModel';
-import { incrementAndFetchOffices } from '../utils/incrementAndFetchOffices';
-import { incrementAndFetchOneOffice } from '../utils/incrementAndFetchOneOffice';
+import { incrementAndFetchOffices } from '../utils/officeController/incrementAndFetchOffices';
+import { incrementAndFetchOneOffice } from '../utils/officeController/incrementAndFetchOneOffice';
 import uploadImage from '../utils/officeController/uploadImage';
 import uploadDocument from '../utils/officeController/uploadDocument';
 import { uploadImageToS3 } from '../utils/s3client';
@@ -36,18 +36,17 @@ export const getOffice = async (req: Request, res: Response) => {
 export const getOffices = async (req: Request, res: Response) => {
     try {
         const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined
-        const {search, dontincrement, type, priceMin, priceMax, sizeMin, sizeMax} = req.query
+        const {search, dontincrement, types, priceMin, priceMax, sizeMin, sizeMax} = req.query
         let page = req.query.page ? +req.query.page : 1;
         const offset = limit ? (page-1) * limit : 0 
 
         let offices;
-
         // Build search query
         let s: any = {hidden: false, $or:[]}
         if(search)
             s.$or = [...s.$or, {name: {$regex: search, $options: "i"}}, {location: {$regex: search, $options: "i"}}, {tags: {$regex: search, $options: "i"}}]
-        if(type)
-            s = {type: type, ...s}
+        if(types)
+            s = {types: {$in: types}, ...s}
         if(priceMin || priceMax) {
             let range = {}
             if(priceMax) range = {...range, $lte: priceMax};
@@ -88,14 +87,14 @@ export const getOffices = async (req: Request, res: Response) => {
 // GET /api/office/count?sizeMax=iii
 export const getOfficesCount = async (req: Request, res: Response) => {
     try {
-        const {search, type, priceMin, priceMax, sizeMin, sizeMax} = req.query
+        const {search, types, priceMin, priceMax, sizeMin, sizeMax} = req.query
 
         // Build search query
         let s: any = {hidden: false, $or:[]}
         if(search)
             s.$or = [...s.$or, {name: {$regex: search, $options: "i"}}, {location: {$regex: search, $options: "i"}}, {tags: {$regex: search, $options: "i"}}]
-        if(type)
-            s = {type: type, ...s}
+        if(types)
+            s = {types: {$in: types}, ...s}
         if(priceMin || priceMax) {
             let range = {}
             if(priceMax) range = {...range, $lte: priceMax};
@@ -135,9 +134,10 @@ export const getUserOffices = async (req: Request, res: Response) => {
 
 // POST /api/office/
 export const postOffice = async (req: Request, res: Response) => {
-    const { name, description, location, price, size, type, lng, lat } = req.body
-    let {tags} = req.body
+    const { name, description, location, price, size, /*type,*/ lng, lat } = req.body
+    let {tags, types} = req.body
     tags = JSON.parse(tags)
+    types = JSON.parse(types)
     const position = {lng: +lng, lat: +lat}
 
     let baseUrl = `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/`;
@@ -153,7 +153,7 @@ export const postOffice = async (req: Request, res: Response) => {
     const imageFiles = files["images[]"];
     const documentFiles = files["files[]"] || [];
 
-    if (!name || !description || !location || !position || !position.lng || !position.lat || !size || !type || price == null) {
+    if (!name || !description || !location || !position || !position.lng || !position.lat || !size || !types || price == null) {
         return res.status(400).json({status: "Bad Request", message: "Missing required fields"})
     }
 
@@ -181,7 +181,7 @@ export const postOffice = async (req: Request, res: Response) => {
             thumbnails: imageUrls.map(urls => urls.thumbnailUrl),
             price,
             tags,
-            type,
+            types,
             size,
             owner: (req.user as IUser)._id
         })
@@ -197,16 +197,18 @@ export const postOffice = async (req: Request, res: Response) => {
 export const putOffice = async (req: Request, res: Response) => {
     try {
         const {id} = req.params
-        const { name, description, price, size, type, existingImages, existingDocuments, existingThumbnails } = req.body
-        let {tags} = req.body
+        const { name, description, price, size, existingImages, existingDocuments, existingThumbnails } = req.body
+        let {tags, types} = req.body
         tags = JSON.parse(tags)
+        types = JSON.parse(types)
         
-        const updateFields: Partial<{ name: string; description: string; price: number; size: number; type: string; tags: string[]; images: string[]; thumbnails: string[]; documents: string[] }> = {};
+        const updateFields: Partial<{ name: string; description: string; price: number; size: number; types: string; tags: string[]; images: string[]; thumbnails: string[]; documents: string[] }> = {};
 
         if (name        !== undefined) updateFields.name = name;
         if (description !== undefined) updateFields.description = description;
         if (size        !== undefined) updateFields.size = size;
-        if (type        !== undefined) updateFields.type = type;
+        if (price       !== undefined) updateFields.price = price;
+        if (types       !== undefined) updateFields.types = types;
         if (tags        !== undefined) updateFields.tags = tags;
         
         // Handle existing images and documents

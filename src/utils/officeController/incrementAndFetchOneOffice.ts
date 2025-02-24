@@ -1,4 +1,4 @@
-import Office, { IOffice } from '../models/officeModel'
+import Office, { IOffice } from '../../models/officeModel'
 
 /**
  * Increment views for a batch of documents and return the updated documents.
