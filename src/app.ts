@@ -14,6 +14,7 @@ import isAuthenticated from './middleware/isAuthenticated';
 import statisticRoutes from './routes/statisticRoutes';
 import savedOfficeRoutes from './routes/savedOfficeRoutes';
 import bodyParser from 'body-parser';
+import articleRoutes from './routes/articleRoutes';
 
 const app: Application = express();
 
@@ -51,6 +52,7 @@ app.use('/api/savedsearch', savedSearchRoutes)
 app.use('/api/pin', pinRoutes)
 app.use('/api/saved', savedOfficeRoutes)
 app.use('/auth', authRoutes)
+app.use('/api/article', articleRoutes)
 
 // Catch-all handler for any requests that don’t match the static files
 app.get('*', (req: Request, res: Response) => {
