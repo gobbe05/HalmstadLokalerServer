@@ -12,6 +12,6 @@ router.post("/", isAuthenticated, adminProtection, postArticle)
 
 router.put("/", isAuthenticated, adminProtection, putArticle)
 
-router.delete("/", isAuthenticated, adminProtection, deleteArticle)
+router.delete("/:id", isAuthenticated, adminProtection, deleteArticle)
 
 export default router
