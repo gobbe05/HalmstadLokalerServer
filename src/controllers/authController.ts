@@ -39,6 +39,17 @@ export const getUser = async (req: Request, res: Response) => {
     }
 }
 
+// GET /api/auth/toaccept
+export const getToAccept = async (req: Request, res: Response) => {
+    try {
+        const users = await User.find({accepted: {$ne: true}})
+        const acceptedUsers = await User.find({accepted: true})
+        return res.status(200).json({status: "OK", users, acceptedUsers})
+    } catch(e) {
+        handleMongooseError(e as MongooseError, res)
+    }
+}
+
 // GET /auth/username/:id
 export const getUsername = async (req: Request, res: Response) => {
     const {id} = req.params
@@ -65,6 +76,7 @@ export const postLogin = async (req: Request, res: Response, next: NextFunction)
     passport.authenticate("local", (err: any, user: any, info: any) => {
         if (err) return next(err);
         if(!user) return res.status(400).json({status: "Bad Request", message: info.message});
+        if(!user.accepted) return res.status(403).json({status: "Forbidden", message: "User not accepted by admin"})
 
         req.logIn(user, (err) => {
             if (err) return next(err);
@@ -86,7 +98,7 @@ export const postRegister = async (req: Request, res: Response) => {
         const newUser = new User({username, email, password, type})
         await newUser.save()
 
-        return res.status(200).json({status: "OK", message: "User created successfully"})
+        return res.status(200).json({status: "OK", message: "User created successfully. Waiting to be accepted by an admin"})
     } catch(e) {
         handleMongooseError(e as MongooseError, res)
     }
@@ -112,6 +124,18 @@ export const putChangePassword = async (req: Request, res: Response) => {
     }
 }
 
+// PUT /api/auth/accept/:id
+export const putAcceptUser = async (req: Request, res: Response) => {
+    const {id} = req.params
+    try {
+        const user = await User.findByIdAndUpdate(id, {accepted: true, acceptDate: new Date()}, {new: true})
+        if(!user)
+            return res.status(404).json({status: "Not Found", message: "User not found"})
+        return res.status(200).json({status: "OK", user})
+    } catch(e) {
+        handleMongooseError(e as MongooseError, res)
+    }
+}
 // DELETE /api/auth/user/:id
 export const deleteUser = async (req: Request, res: Response) => {
     try {
