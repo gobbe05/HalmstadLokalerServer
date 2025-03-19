@@ -6,7 +6,7 @@ import passport from "passport"
 
 // GET /api/auth/
 export const getAuth = async (req: Request, res: Response) => {
-    return res.status(200).json({status: "OK",message: "Authenticated", type: (req.user as IUser).type, _id: (req.user as IUser)._id})
+    return res.status(200).json({status: "OK",isAdmin: (req.user as IUser).admin,message: "Authenticated", type: (req.user as IUser).type, _id: (req.user as IUser)._id})
 }
 
 // GET /api/auth/me/
