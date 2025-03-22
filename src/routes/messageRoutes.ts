@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteMessage, getMessage, getMessages, postMessage } from "../controllers/messageController";
+import { deleteMessage, getMessage, getMessages, getSentMessages, postMessage } from "../controllers/messageController";
 import isAuthenticated from "../middleware/isAuthenticated";
 
 const router = Router()
@@ -8,8 +8,9 @@ const router = Router()
 //router.get("/all", getAllMessages)
 
 //router.get("/latest/:id", isAuthenticated, getLatestMessage)
-router.get("/:id", isAuthenticated, getMessage)
 router.get("/", isAuthenticated, getMessages)
+router.get("/sent/:id", isAuthenticated, getSentMessages)
+router.get("/:id", isAuthenticated, getMessage)
 
 router.post("/", isAuthenticated, postMessage)
 //router.post("/first", isAuthenticated, postFirstMessage)
