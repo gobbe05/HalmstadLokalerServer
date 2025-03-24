@@ -122,10 +122,22 @@ export const getUserOffices = async (req: Request, res: Response) => {
     try {
         const {id} = req.params
         const {limit} = req.query
-        const offices = limit ? await Office.find({owner: id}).limit(+limit) : await Office.find({owner: id})
+        const offices = limit ? await Office.find({owner: id, hidden: false}).limit(+limit) : await Office.find({owner: id, hidden: false})
 
         if(!offices) return res.status(404).json({status: "Not Found"})
 
+        return res.status(200).json({status: "OK", offices})
+    } catch(e) {
+        handleMongooseError(e as MongooseError, res)
+    }
+}
+// GET /api/office/self?limit=x
+export const getSelfOffices = async (req: Request, res: Response) => {
+    try {
+        const {limit} = req.query
+        const offices = limit ? await Office.find({owner: (req.user as IUser)._id}).limit(+limit) : await Office.find({owner: (req.user as IUser)._id})
+
+        if(!offices) return res.status(404).json({status: "Not Found"})
         return res.status(200).json({status: "OK", offices})
     } catch(e) {
         handleMongooseError(e as MongooseError, res)
