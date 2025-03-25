@@ -39,14 +39,15 @@ export const postArticle = async (req: Request, res: Response) => {
 
 export const putArticle = async (req: Request, res: Response) => {
     const {id} = req.params
-    const {title, content, author} = req.body
+    const {title, content, image} = req.body
     try {
         const article = await Article.findOne({_id: id})
         if(!article)
             return res.status(404).json({status: "Not Found", message: "Article not found"});
         article.title = title
         article.content = content
-        article.author = author
+        article.image = image
+
         await article.save()
         return res.status(200).json({status: "OK", article})
     } catch(e) {

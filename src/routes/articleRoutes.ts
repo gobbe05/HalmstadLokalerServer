@@ -10,7 +10,7 @@ router.get("/", getAllArticles)
 
 router.post("/", isAuthenticated, adminProtection, postArticle)
 
-router.put("/", isAuthenticated, adminProtection, putArticle)
+router.put("/:id", isAuthenticated, adminProtection, putArticle)
 
 router.delete("/:id", isAuthenticated, adminProtection, deleteArticle)
 
