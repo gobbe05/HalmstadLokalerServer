@@ -9,7 +9,9 @@ export interface IUser extends Document {
     email: string,
     password: string,
     type: string,
-    admin: boolean
+    admin: boolean,
+    accepted: boolean,
+    acceptDate?: Date,
 
     comparePassword: (password: string) => Promise<boolean>
 }
@@ -31,7 +33,9 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
     },
     password: {type: String, required: [true, "Password is required"]},
     type: {type: String, required: [true, "Account type is required"]},
-    admin: {type: Boolean, default: false}
+    admin: {type: Boolean, default: false},
+    accepted: {type: Boolean, default: false, required: [true, "Acceptance status is required"]},
+    acceptDate: {type: Date, required: false}
 })
 
 userSchema.pre("save", async function (next) {

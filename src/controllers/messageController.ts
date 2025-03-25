@@ -22,6 +22,17 @@ export const getMessages = async (req: Request, res: Response) => {
         handleMongooseError(e as MongooseError, res)
     }
 }
+// /api/message/sent/:id
+export const getSentMessages = async (req: Request, res: Response) => {
+    const userid = (req.user as IUser)._id
+    try {
+        // TODO // Sort result
+        const messages = await Message.find({sender: userid})
+        return res.status(200).json({status: "OK", messages})
+    } catch(e) {
+        handleMongooseError(e as MongooseError, res)
+    }
+}
 // GET /api/message/:id
 export const getMessage = async (req: Request, res: Response) => {
     const {id} = req.params
@@ -29,7 +40,8 @@ export const getMessage = async (req: Request, res: Response) => {
         const userid = (req.user as IUser)._id
         const message = await Message.findOne({_id: id})
         if(!message) return res.status(404).json({status: "Not Found", msg: "Message couldn't be found"});
-        if(!new Types.ObjectId(userid).equals(message.receiver)) return res.status(401).json({status: "Unauthorized", msg: "You don't have access to this message"});
+        if(!new Types.ObjectId(userid).equals(message.receiver) && !new Types.ObjectId(userid).equals(message.sender)) 
+            return res.status(401).json({status: "Unauthorized", msg: "You don't have access to this message"});
         return res.status(200).json({status: "OK", message})
     } catch(e) {
         handleMongooseError(e as MongooseError, res)

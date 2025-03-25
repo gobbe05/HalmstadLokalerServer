@@ -42,13 +42,14 @@ export const getSavedOfficeState = async (req: Request, res: Response) => {
 
 export const postSavedOffice = async (req: Request, res: Response) => {
     try {
-        const id = (req.user as IUser)._id
+        const {_id, type} = (req.user as IUser)
         const {office} = req.body
-        const checkSavedOffice = await SavedOffice.findOne({user: id, office})
+        const checkSavedOffice = await SavedOffice.findOne({user: _id, office})
+        if(type != "buyer") return res.status(403).json({status: "Forbidden", msg: "You are not allowed to save offices"})
         if(checkSavedOffice) return res.status(400).json({status: "Bad Request", msg: "You have already saved this office"})
         
         const newSavedOffice = new SavedOffice({
-            user: id,
+            user: _id,
             office
         })
         await newSavedOffice.save()
