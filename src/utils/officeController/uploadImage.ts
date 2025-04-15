@@ -14,7 +14,7 @@ export default async function uploadImage(file: Express.Multer.File, baseUrl: st
     await uploadImageToS3(bucketName, thumbnailKey, thumbnail);   
 
     return {
-        imageUrl: `${baseUrl}${key}`,
-        thumbnailUrl: `${baseUrl}${thumbnailKey}`
+        imageUrl: `${key}`,
+        thumbnailUrl: `${thumbnailKey}`
     }
 }

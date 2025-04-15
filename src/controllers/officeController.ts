@@ -214,7 +214,17 @@ export const putOffice = async (req: Request, res: Response) => {
         tags = JSON.parse(tags)
         types = JSON.parse(types)
         
-        const updateFields: Partial<{ name: string; description: string; price: number; size: number; types: string; tags: string[]; images: string[]; thumbnails: string[]; documents: string[] }> = {};
+        const updateFields: Partial<{
+            name: string;
+            description: string;
+            price: number;
+            size: number;
+            types: string;
+            tags: string[];
+            images: string[];
+            thumbnails: string[];
+            documents: string[];
+        }> = {};
 
         if (name        !== undefined) updateFields.name = name;
         if (description !== undefined) updateFields.description = description;
@@ -223,11 +233,36 @@ export const putOffice = async (req: Request, res: Response) => {
         if (types       !== undefined) updateFields.types = types;
         if (tags        !== undefined) updateFields.tags = tags;
         
-        // Handle existing images and documents
-        if (existingImages) updateFields.images = existingImages;
-        if (existingDocuments) updateFields.documents = existingDocuments;
-        if (existingThumbnails) updateFields.thumbnails = existingThumbnails;
+        if(!existingImages) return res.status(400).json({status: "Bad Request", message: "Missing images"})
+
+        // Fetch the current office data
+        const office = await Office.findById(id);
+        if (!office) return res.status(404).json({ status: "Not Found", message: "Office not found" });
         
+        // Handle existing images and thumbnails
+        if (existingImages) {
+            const removedImages = office.images.filter((image: String) => !existingImages.includes(image));
+            const removedThumbnails = office.thumbnails.filter((thumbnail: String) => !existingThumbnails.includes(thumbnail));
+
+            // Delete removed images and thumbnails from S3
+            /* TODO *///await Promise.all(removedImages.map((image) => deleteFileFromS3(image)));
+            /* TODO *///await Promise.all(removedThumbnails.map((thumbnail) => deleteFileFromS3(thumbnail)));
+
+            updateFields.images = existingImages;
+            updateFields.thumbnails = existingThumbnails;
+        }
+
+        // Handle existing documents
+        if (existingDocuments) {
+            const removedDocuments = office.documents.filter((document: String) => !existingDocuments.includes(document));
+
+            // Delete removed documents from S3
+            /* TODO*///await Promise.all(removedDocuments.map((document) => deleteFileFromS3(document)));
+
+            updateFields.documents = existingDocuments;
+        } else {
+            updateFields.documents = [];
+        }
         const files = req.files as {[fieldname: string]: Express.Multer.File[]}
         
         // Handle new file uploads
@@ -256,13 +291,13 @@ export const putOffice = async (req: Request, res: Response) => {
                 await uploadImageToS3(bucketName, thumbnailKey, thumbnailBuffer);
 
                 return {
-                    imageUrl: `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/${key}`,
-                    thumbnailUrl: `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/${thumbnailKey}`
+                    images: `${key}`,
+                    thumbnails: `${thumbnailKey}`
                 };
             }));
 
-            updateFields.images = [...(updateFields.images || []), ...imageUrls.map(urls => urls.imageUrl)];
-            updateFields.thumbnails = [...(updateFields.thumbnails || []), ...imageUrls.map(urls => urls.thumbnailUrl)]
+            updateFields.images = [...(updateFields.images || []), ...imageUrls.map(urls => urls.images)];
+            updateFields.thumbnails = [...(updateFields.thumbnails || []), ...imageUrls.map(urls => urls.thumbnails)]
         }
 
         if (files && files['files[]'] && Array.isArray(files['files[]']) && files['files[]'].length > 0) {
@@ -279,7 +314,7 @@ export const putOffice = async (req: Request, res: Response) => {
 
                 await uploadImageToS3(bucketName, key, file.buffer);
 
-                return `https://halmstadlokaler.s3.eu-north-1.amazonaws.com/${key}`;
+                return `${key}`;
             }));
 
             updateFields.documents = [...(updateFields.documents || []), ...documentUrls];
