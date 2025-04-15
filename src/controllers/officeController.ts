@@ -158,11 +158,7 @@ export const postOffice = async (req: Request, res: Response) => {
 
     const files = req.files as {[fieldname: string]: Express.Multer.File[]}
 
-    if (!files || !files['images[]'] || !Array.isArray(files['images[]']) || files['images[]'].length === 0) {
-        return res.status(400).json({status: "Bad Request", message: "Missing image files"})
-    }
-
-    const imageFiles = files["images[]"];
+    const imageFiles = files["images[]"] || [];
     const documentFiles = files["files[]"] || [];
 
     if (!name || !description || !location || !position || !position.lng || !position.lat || !size || !types || price == null) {
@@ -233,8 +229,6 @@ export const putOffice = async (req: Request, res: Response) => {
         if (types       !== undefined) updateFields.types = types;
         if (tags        !== undefined) updateFields.tags = tags;
         
-        if(!existingImages) return res.status(400).json({status: "Bad Request", message: "Missing images"})
-
         // Fetch the current office data
         const office = await Office.findById(id);
         if (!office) return res.status(404).json({ status: "Not Found", message: "Office not found" });
@@ -250,6 +244,9 @@ export const putOffice = async (req: Request, res: Response) => {
 
             updateFields.images = existingImages;
             updateFields.thumbnails = existingThumbnails;
+        } else {
+            updateFields.images = [];
+            updateFields.thumbnails = [];
         }
 
         // Handle existing documents
