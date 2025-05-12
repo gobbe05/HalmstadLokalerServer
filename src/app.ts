@@ -15,6 +15,7 @@ import statisticRoutes from './routes/statisticRoutes';
 import savedOfficeRoutes from './routes/savedOfficeRoutes';
 import bodyParser from 'body-parser';
 import articleRoutes from './routes/articleRoutes';
+import sellerRoutes from './routes/sellerRoutes';
 
 const app: Application = express();
 
@@ -50,6 +51,7 @@ app.use('/api/conversation', conversationRoutes)
 app.use('/api/office', officeRoutes)
 app.use('/api/savedsearch', savedSearchRoutes)
 app.use('/api/pin', pinRoutes)
+app.use('/api/seller', isAuthenticated, sellerRoutes)
 app.use('/api/saved', savedOfficeRoutes)
 app.use('/auth', authRoutes)
 app.use('/api/article', articleRoutes)
