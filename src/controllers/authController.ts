@@ -27,9 +27,9 @@ export const getAllUsers = async (req: Request, res: Response) => {
 
 // GET /api/auth/user/:username
 export const getUser = async (req: Request, res: Response) => {
-    const {username} = req.params
+    const {search} = req.params
     try {
-        const user = await User.findOne({username})
+        const user = await User.findOne({$or: [{username: search}, {_id: search}]})
         if(!user)
             return res.status(404).json({status: "Not Found", message: "User not found"});
 
