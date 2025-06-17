@@ -87,20 +87,68 @@ export const postLogin = async (req: Request, res: Response, next: NextFunction)
 
 // POST /api/auth/register/
 export const postRegister = async (req: Request, res: Response) => {
-    const {username, email, password, type} = req.body
+    let {
+        username, 
+        email, 
+        password, 
+        confirmPassword, 
+        accountType, 
+        firstName, 
+        lastName, 
+        companyName, 
+        orgNr, 
+        invoiceAddress
+    } = req.body
+
+    // Normalize
+    if (email) email = email.toLowerCase();
+
     try {
-        const existingUser = await User.findOne({$or: [{username}, {email}]})
+        // Validate required fields
+        if(password !== confirmPassword)
+            return res.status(400).json({status: "Bad Request", message: "Passwords do not match"});
+        if(!username || !email || !password || !confirmPassword || !accountType)
+            return res.status(400).json({status: "Bad Request", message: "All fields are required"});
+        if(accountType === "seller" && (!firstName || !lastName || !companyName || !orgNr || !invoiceAddress))
+            return res.status(400).json({status: "Bad Request", message: "All fields are required for seller account"});
+        if(!["buyer", "seller"].includes(accountType))
+            return res.status(400).json({status: "Bad Request", message: "Invalid account type"});
+        if(!/^[a-zA-Z0-9_]+$/.test(username))
+            return res.status(400).json({status: "Bad Request", message: "Username can only contain letters, numbers and underscores"});
+        if(!/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(email))
+            return res.status(400).json({status: "Bad Request", message: "Invalid email format"});
+        if(password.length < 6) 
+            return res.status(400).json({status: "Bad Request", message: "Password must be at least 6 characters long"});
+
+        const existingUser = await User.findOne({$or: [{username}, {email}]});
         if(existingUser) {
             return res.status(403).json({
                 status: "Forbidden",
-                message: existingUser.email === email.toLowerCase() ? "Email already exists" : "Username already exists"})
+                message: existingUser.email === email ? "Email already exists" : "Username already exists"
+            });
         }
-        const newUser = new User({username, email, password, type})
-        await newUser.save()
 
-        return res.status(200).json({status: "OK", message: "User created successfully. Waiting to be accepted by an admin"})
+        // Only now construct the user object
+        const newUser = accountType === "buyer" ? 
+            new User({username, email, password, type: accountType})
+            :
+            new User({
+                username,
+                email,
+                password,
+                type: accountType,
+                firstName,
+                lastName,
+                companyName,
+                orgNr,
+                invoiceAddress
+            });
+
+        await newUser.save();
+
+        return res.status(200).json({status: "OK", message: "User created successfully. Waiting to be accepted by an admin"});
     } catch(e) {
-        handleMongooseError(e as MongooseError, res)
+        handleMongooseError(e as MongooseError, res);
     }
 }
 

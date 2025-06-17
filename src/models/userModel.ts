@@ -12,6 +12,12 @@ export interface IUser extends Document {
     admin: boolean,
     accepted: boolean,
     acceptDate?: Date,
+    // Add seller fields
+    firstName?: string,
+    lastName?: string,
+    companyName?: string,
+    orgNr?: string,
+    invoiceAddress?: string,
 
     comparePassword: (password: string) => Promise<boolean>
 }
@@ -35,7 +41,13 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
     type: {type: String, required: [true, "Account type is required"]},
     admin: {type: Boolean, default: false},
     accepted: {type: Boolean, default: false, required: [true, "Acceptance status is required"]},
-    acceptDate: {type: Date, required: false}
+    acceptDate: {type: Date, required: false},
+    // Add seller fields
+    firstName: { type: String, required: false },
+    lastName: { type: String, required: false },
+    companyName: { type: String, required: false },
+    orgNr: { type: String, required: false },
+    invoiceAddress: { type: String, required: false }
 })
 
 userSchema.pre("save", async function (next) {
