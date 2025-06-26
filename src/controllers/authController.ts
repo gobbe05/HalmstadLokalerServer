@@ -3,6 +3,7 @@ import User, { IUser } from "../models/userModel"
 import { MongooseError } from "mongoose"
 import handleMongooseError from "../utils/errorHandler"
 import passport from "passport"
+import maskEmail from "../utils/maskEmail"
 
 // GET /api/auth/
 export const getAuth = async (req: Request, res: Response) => {
@@ -33,6 +34,17 @@ export const getUser = async (req: Request, res: Response) => {
         if(!user)
             return res.status(404).json({status: "Not Found", message: "User not found"});
 
+        // If not admin and not the user themselves, mask email and phone
+        if(!req.user || !(req.user as IUser).admin && (req.user as IUser)._id.toString() !== user._id.toString()){
+            return res.status(200).json({status: "OK", user: {
+                username: user.username, 
+                type: user.type, 
+                _id: user._id, 
+                email: maskEmail(user.email), 
+                //phone: maskedPhone(user.phone),
+                firstName: user.firstName,
+                lastName: user.lastName,}})  
+        }
         return res.status(200).json({status: "OK", user})
     } catch(e){
         handleMongooseError(e as MongooseError, res)
