@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteUser, getAllUsers, getAuth, getLogout, getMe, getToAccept, getUser, getUsername, postLogin, postRegister, putAcceptUser, putChangePassword} from "../controllers/authController";
+import { deleteUser, getAllUsers, getAuth, getLogout, getMe, getToAccept, getUser, getUsername, postLogin, postRegister, putAcceptUser, putUser, putChangePassword} from "../controllers/authController";
 import isAuthenticated from "../middleware/isAuthenticated";
 import { IUser } from "../models/userModel";
 import adminProtection from "../middleware/adminProtection";
@@ -18,6 +18,7 @@ router.get("/isadmin", isAuthenticated, (req, res) => res.json({isAdmin: (req.us
 router.post("/login", postLogin);
 router.post("/register", postRegister)
 
+router.put("/user/:id", isAuthenticated, putUser)
 router.put("/changepassword", isAuthenticated, putChangePassword)
 router.put("/accept/:id", isAuthenticated, adminProtection, putAcceptUser)
 
