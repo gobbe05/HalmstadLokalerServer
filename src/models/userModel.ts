@@ -15,6 +15,7 @@ export interface IUser extends Document {
     // Add seller fields
     firstName?: string,
     lastName?: string,
+    phoneNumber?: string,
     companyName?: string,
     orgNr?: string,
     invoiceAddress?: string,
@@ -45,6 +46,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
     // Add seller fields
     firstName: { type: String, required: false },
     lastName: { type: String, required: false },
+    phoneNumber: { type: String, required: false },
     companyName: { type: String, required: false },
     orgNr: { type: String, required: false },
     invoiceAddress: { type: String, required: false }

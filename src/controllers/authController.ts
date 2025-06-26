@@ -4,6 +4,7 @@ import { MongooseError } from "mongoose"
 import handleMongooseError from "../utils/errorHandler"
 import passport from "passport"
 import maskEmail from "../utils/maskEmail"
+import maskPhone from "../utils/maskPhone"
 
 // GET /api/auth/
 export const getAuth = async (req: Request, res: Response) => {
@@ -41,7 +42,7 @@ export const getUser = async (req: Request, res: Response) => {
                 type: user.type, 
                 _id: user._id, 
                 email: maskEmail(user.email), 
-                //phone: maskedPhone(user.phone),
+                phoneNumber: maskPhone(user.phoneNumber || ""),
                 firstName: user.firstName,
                 lastName: user.lastName,}})  
         }
@@ -106,7 +107,8 @@ export const postRegister = async (req: Request, res: Response) => {
         confirmPassword, 
         accountType, 
         firstName, 
-        lastName, 
+        lastName,
+        phoneNumber,
         companyName, 
         orgNr, 
         invoiceAddress
@@ -121,7 +123,7 @@ export const postRegister = async (req: Request, res: Response) => {
             return res.status(400).json({status: "Bad Request", message: "Passwords do not match"});
         if(!username || !email || !password || !confirmPassword || !accountType)
             return res.status(400).json({status: "Bad Request", message: "All fields are required"});
-        if(accountType === "seller" && (!firstName || !lastName || !companyName || !orgNr || !invoiceAddress))
+        if(accountType === "seller" && (!firstName || !lastName || !phoneNumber || !companyName || !orgNr || !invoiceAddress))
             return res.status(400).json({status: "Bad Request", message: "All fields are required for seller account"});
         if(!["buyer", "seller"].includes(accountType))
             return res.status(400).json({status: "Bad Request", message: "Invalid account type"});
@@ -129,6 +131,9 @@ export const postRegister = async (req: Request, res: Response) => {
             return res.status(400).json({status: "Bad Request", message: "Username can only contain letters, numbers and underscores"});
         if(!/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(email))
             return res.status(400).json({status: "Bad Request", message: "Invalid email format"});
+        /*Test phone*/
+        if(phoneNumber && !/^\+?[0-9\s]+$/.test(phoneNumber))
+            return res.status(400).json({status: "Bad Request", message: "Invalid phone number format"});
         if(password.length < 6) 
             return res.status(400).json({status: "Bad Request", message: "Password must be at least 6 characters long"});
 
@@ -151,6 +156,7 @@ export const postRegister = async (req: Request, res: Response) => {
                 type: accountType,
                 firstName,
                 lastName,
+                phoneNumber,
                 companyName,
                 orgNr,
                 invoiceAddress
