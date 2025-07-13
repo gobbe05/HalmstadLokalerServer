@@ -5,6 +5,7 @@ import handleMongooseError from "../utils/errorHandler"
 import passport from "passport"
 import maskEmail from "../utils/maskEmail"
 import maskPhone from "../utils/maskPhone"
+import CleanPhoneNumber from "../utils/cleanPhoneNumber"
 
 // GET /api/auth/
 export const getAuth = async (req: Request, res: Response) => {
@@ -193,13 +194,16 @@ export const putChangePassword = async (req: Request, res: Response) => {
 // PUT /api/auth/user/:id
 export const putUser = async (req: Request, res: Response) => {
     const {id} = req.params
-    const {firstName, lastName, invoiceAddress} = req.body
-    if(!firstName && !lastName && !invoiceAddress)
+    const {firstName, lastName, phoneNumber, invoiceAddress} = req.body
+    const cleanedPhoneNumber = CleanPhoneNumber(phoneNumber)
+    if(!cleanedPhoneNumber)
+        return res.status(400).json({status: "Bad Request", message: "Invalid phone number format"})
+    if(!firstName && !lastName && !invoiceAddress && !phoneNumber)
         return res.status(400).json({status: "Bad Request", message: "At least one field is required to update"})
     try {
         if((req.user as IUser)._id.toString() !== id)
             return res.status(401).json({status: "Unauthorized", message: "You can only update your own profile"})
-        const user = await User.findByIdAndUpdate(id, {firstName, lastName, invoiceAddress}, {new: true})
+        const user = await User.findByIdAndUpdate(id, {firstName, lastName, invoiceAddress, cleanedPhoneNumber}, {new: true})
         if(!user)
             return res.status(404).json({status: "Not Found", message: "User not found"})
         return res.status(200).json({status: "OK", user})
