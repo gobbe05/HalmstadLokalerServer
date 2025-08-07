@@ -87,6 +87,10 @@ export const getLogout = async (req: Request, res: Response, next: NextFunction)
 
 // POST /api/auth/login/
 export const postLogin = async (req: Request, res: Response, next: NextFunction) => {
+    // Normalize email and username before authentication
+    if(req.body.email) req.body.email = req.body.email.toLowerCase();
+    if(req.body.username) req.body.username = req.body.username.toLowerCase();
+
     passport.authenticate("local", (err: any, user: any, info: any) => {
         if (err) return next(err);
         if(!user) return res.status(400).json({status: "Bad Request", message: info.message});
@@ -117,6 +121,7 @@ export const postRegister = async (req: Request, res: Response) => {
 
     // Normalize
     if (email) email = email.toLowerCase();
+    if (username) username = username.toLowerCase();
 
     try {
         // Validate required fields
@@ -171,6 +176,39 @@ export const postRegister = async (req: Request, res: Response) => {
     }
 }
 
+// POST /api/auth/register/validateFirst
+export const postValidateFirst = async (req: Request, res: Response) => {
+    let {email, username} = req.body
+    const {password, confirmPassword, accountType} = req.body;
+    if(email) email = email.toLowerCase();
+    if(username) username = username.toLowerCase();
+
+    try {
+        // Validate required fields
+        // Check that fields are not empty
+        if(password !== confirmPassword)
+            return res.status(400).json({status: "Bad Request", message: "Passwords do not match"});
+        if(!username || !email || !password || !confirmPassword || !accountType)
+            return res.status(400).json({status: "Bad Request", message: "All fields are required"});
+        
+        // Check field format
+        if(!/^[a-zA-Z0-9_]+$/.test(username))
+            return res.status(400).json({status: "Bad Request", message: "Username can only contain letters, numbers and underscores"});
+        if(!/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(email))
+            return res.status(400).json({status: "Bad Request", message: "Invalid email format"});
+
+        const existingUser = await User.findOne({$or: [{username}, {email}]});
+        if(existingUser) {
+            return res.status(403).json({
+                status: "Forbidden",
+                message: existingUser.email === email ? "Email already exists" : "Username already exists"
+            });
+        }
+    } catch(e) {
+        handleMongooseError(e as MongooseError, res);
+    }
+    return res.status(200).json({status: "OK", message: "Validation successful"});
+}
 // PUT /api/auth/changepassword
 export const putChangePassword = async (req: Request, res: Response) => {
     const {password, username} = req.body
