@@ -77,6 +77,32 @@ export const getUsername = async (req: Request, res: Response) => {
     }
 }
 
+// GET /auth/email/:id
+export const getEmail = async (req: Request, res: Response) => {
+    const {id} = req.params
+    try {
+        const user = await User.findOne({_id: id})
+        if(!user)
+            return res.status(404).json({status: "Not found", message: "User not found"});
+        return res.status(200).json({status: "OK", email: user.email})
+    } catch(e) {
+        handleMongooseError(e as MongooseError, res)
+    }
+}
+
+// GET /auth/phone/:id
+export const getPhone = async (req: Request, res: Response) => {
+    const {id} = req.params
+    try {
+        const user = await User.findOne({_id: id})
+        if(!user)
+            return res.status(404).json({status: "Not found", message: "User not found"});
+            return res.status(200).json({status: "OK", phoneNumber: user.phoneNumber})
+    } catch(e) {
+        handleMongooseError(e as MongooseError, res)
+    }
+}
+
 // GET /api/auth/logout/
 export const getLogout = async (req: Request, res: Response, next: NextFunction) => {
     req.logout((err) => {
