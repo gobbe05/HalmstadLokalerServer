@@ -52,19 +52,19 @@ export const getMessage = async (req: Request, res: Response) => {
 export const postMessage = async (req: Request, res: Response) => {
     const {message, email, phone, company, receiver} = req.body
     try {
-        const userid = (req.user as IUser)._id
-        const userType = (req.user as IUser).type
+        const userid = (req.user as IUser)?._id || "";
+        const userType = (req.user as IUser)?.type || "";
 
         if(!message) return res.status(400).json({status: "Bad Request", msg: "Message can't be empty"})
         if(!email) return res.status(400).json({status: "Bad Request", msg: "Email can't be empty"})
         if(!phone) return res.status(400).json({status: "Bad Request", msg: "Phone number can't be empty"})
         if(!company) return res.status(400).json({status: "Bad Request", msg: "Company name can't be empty"})
         if(userid == receiver) return res.status(400).json({status: "Bad Request", msg: "You can't send a message to yourself"})
-        if(userType != "buyer") return res.status(401).json({status: "Unauthorized", msg: "You must be a buyer to send messages"})
+        if(userType == "seller") return res.status(401).json({status: "Unauthorized", msg: "You can't be a seller to send messages"})
 
         // Create message
         const newMessage = new Message({
-            sender: userid,
+            sender: userid || null,
             receiver,
             message,
             email,

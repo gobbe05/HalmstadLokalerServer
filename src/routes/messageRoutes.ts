@@ -12,7 +12,7 @@ router.get("/", isAuthenticated, getMessages)
 router.get("/sent/:id", isAuthenticated, getSentMessages)
 router.get("/:id", isAuthenticated, getMessage)
 
-router.post("/", isAuthenticated, postMessage)
+router.post("/", postMessage)
 //router.post("/first", isAuthenticated, postFirstMessage)
 
 router.delete("/:id", isAuthenticated, deleteMessage)

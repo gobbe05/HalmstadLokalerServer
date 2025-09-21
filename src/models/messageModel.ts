@@ -10,7 +10,7 @@ interface IMessage extends Document {
 }
 
 const MessageSchema = new Schema<IMessage>({
-    sender: {type: Schema.Types.ObjectId, ref: "User", required: true},
+    sender: {type: Schema.Types.ObjectId, ref: "User", required: false},
     receiver: {type: Schema.Types.ObjectId, ref: "User", required: true},
     message: {type: String, required: true},
     email: {type: String, required: true},
