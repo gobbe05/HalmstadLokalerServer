@@ -3,6 +3,7 @@ import { IUser } from '../models/userModel'
 import handleMongooseError from '../utils/errorHandler'
 import { MongooseError, Types } from 'mongoose'
 import Message from '../models/messageModel'
+import { sendEmail } from '../utils/email'
 
 // GET /api/message/all
 export const getAllMessages = async (req: Request, res: Response) => {
@@ -54,6 +55,7 @@ export const postMessage = async (req: Request, res: Response) => {
     try {
         const userid = (req.user as IUser)?._id || "";
         const userType = (req.user as IUser)?.type || "";
+        const userFirstName = (req.user as IUser)?.firstName || "en intressent";
 
         if(!message) return res.status(400).json({status: "Bad Request", msg: "Message can't be empty"})
         if(!email) return res.status(400).json({status: "Bad Request", msg: "Email can't be empty"})
@@ -72,6 +74,11 @@ export const postMessage = async (req: Request, res: Response) => {
             phone
         })
         await newMessage.save()
+        sendEmail({
+            to: email,
+            subject: "Nytt meddelande mottaget",
+            html: `<p>Du har fått ett nytt meddelande från ${userFirstName}!</p><p>Logga in på <a href="https://halmstadlokaler.se">HalmstadLokaler</a> för att läsa meddelandet.</p>`
+        })
 
         return res.status(200).json({status: "OK"})
     } catch(e) {
